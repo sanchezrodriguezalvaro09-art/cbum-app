@@ -1,7 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS personalizado - Forzamos texto negro en los desplegables
+# CSS para arreglar colores de los desplegables
 st.markdown("""
     <style>
     /* Fondo general oscuro */
@@ -9,27 +9,18 @@ st.markdown("""
         background-color: #0E1117 !important;
     }
     
-    /* Botones (mantienen su estilo) */
-    div.stButton > button {
-        background-color: #FFD700 !important;
-        color: black !important;
-        border-radius: 10px !important;
-        font-weight: bold !important;
+    /* Forzar letras negras en los desplegables */
+    div[data-baseweb="select"] div {
+        color: #000000 !important;
     }
-
-    /* Etiquetas fuera de los desplegables (blancas para que se vean bien) */
+    
+    /* Etiquetas blancas para que se vean bien */
     label {
         color: #FFFFFF !important;
     }
-
-    /* FORZAMOS LETRAS NEGRAS EN LOS DESPLEGABLES */
-    div[data-baseweb="select"] div, 
-    div[role="option"] {
-        color: #000000 !important;
-    }
-
-    /* Títulos y texto general (blancos) */
-    h1, h2, h3, p, div {
+    
+    /* Textos generales blancos */
+    h1, h2, h3, p, div:not([data-baseweb="select"] div) {
         color: #FFFFFF !important;
     }
     </style>
