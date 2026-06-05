@@ -23,9 +23,8 @@ with col2:
     nivel = st.select_slider("Nivel", options=["Principiante", "Intermedio", "Avanzado"])
 
 objetivo = st.selectbox("Objetivo:", ["Hipertrofia", "Definición", "Músculo magro"])
-equipo = st.selectbox("Equipamiento:", ["Mancuernas", "Peso libre", "Máquinas"])
 
-if st.button("Generar Plan de Élite"):
+if st.button("Generar Plan Fusionado (Máquinas + Mancuernas)"):
     # --- Suplementación ---
     st.markdown("---")
     st.markdown("### 💊 Protocolo de Suplementación")
@@ -38,7 +37,7 @@ if st.button("Generar Plan de Élite"):
     series_reps = "3x12" if nivel == "Principiante" else "4x10" if nivel == "Intermedio" else "5x10 con Drop-sets"
     
     st.markdown("---")
-    st.subheader(f"Rutina para {dias} días - {objetivo}")
+    st.subheader(f"Rutina Híbrida para {dias} días - {objetivo}")
 
     # Temporizador
     if st.button("⏱️ Iniciar descanso (90s)"):
@@ -48,17 +47,18 @@ if st.button("Generar Plan de Élite"):
                 time.sleep(1)
             st.write("¡A por la siguiente serie!")
 
+    # Base de ejercicios fusionada (Lo mejor de máquinas y mancuernas)
     ejercicios = {
-        "Pecho": ["Press Inclinado", "Press Plano", "Fondos", "Aperturas"],
-        "Espalda": ["Dominadas", "Remo", "Jalón al pecho", "Remo a una mano"],
-        "Bíceps": ["Curl Barra", "Curl Martillo", "Curl Scott", "Curl Inclinado"],
-        "Tríceps": ["Press Francés", "Ext. Polea", "Dips", "Ext. Tras nuca"],
-        "Pierna": ["Sentadilla", "Prensa", "Curl femoral", "Extensiones"],
-        "Abdomen": ["Plancha", "Crunch", "Elev. piernas", "Rueda"],
-        "Antebrazo": ["Curl muñeca", "Paseo granjero", "Curl invertido", "Hold agarre"]
+        "Pecho": ["Press Inclinado (Mancuernas)", "Press Plano (Máquina)", "Fondos", "Aperturas (Máquina)"],
+        "Espalda": ["Dominadas", "Remo en Máquina", "Jalón al pecho", "Remo con Mancuerna"],
+        "Bíceps": ["Curl con Mancuerna", "Curl en Máquina", "Curl Martillo", "Curl Scott (Máquina)"],
+        "Tríceps": ["Press Francés (Mancuernas)", "Extensiones polea (Máquina)", "Dips", "Ext. tras nuca (Mancuerna)"],
+        "Pierna": ["Sentadilla con Mancuerna", "Prensa", "Curl femoral (Máquina)", "Extensiones (Máquina)"],
+        "Abdomen": ["Plancha", "Crunch en Máquina", "Elev. piernas", "Rueda abdominal"],
+        "Antebrazo": ["Curl muñeca (Mancuerna)", "Paseo granjero", "Curl invertido", "Hold agarre (Máquina)"]
     }
 
-    # Asignación exacta según días
+    # Asignación exacta según días (Mismo esquema que pediste)
     if dias == 3:
         rutina_map = {"Día 1": ["Pecho", "Tríceps"], "Día 2": ["Espalda", "Bíceps"], "Día 3": ["Pierna", "Abdomen", "Antebrazo"]}
     elif dias == 4:
@@ -82,6 +82,5 @@ if st.button("Generar Plan de Élite"):
                     with col3:
                         st.number_input("kg", key=f"peso_{dia}_{ej}", min_value=0.0, step=0.5)
 
-    st.success("¡Plan guardado! Registra tus pesos cada día para ver tu evolución.")
-
+    st.success("¡Plan guardado! Registra tus pesos y observa tu evolución.")
 
