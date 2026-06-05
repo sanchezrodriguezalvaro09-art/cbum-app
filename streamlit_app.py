@@ -6,6 +6,7 @@ st.markdown("""
     <style>
     .stApp {
         background-color: #0E1117;
+        color: #FFFFFF;
     }
     div.stButton > button {
         background-color: #FFD700;
@@ -13,8 +14,11 @@ st.markdown("""
         border-radius: 10px;
         font-weight: bold;
     }
-    .stTextInput > label, .stNumberInput > label {
-        color: #FFFFFF;
+    .stTextInput > label, .stNumberInput > label, .stSelectbox > label {
+        color: #FFFFFF !important;
+    }
+    h1, h2, h3, p, div {
+        color: #FFFFFF !important;
     }
     </style>
 """, unsafe_allow_html=True)
