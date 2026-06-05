@@ -3,24 +3,18 @@ from supabase import create_client
 import pandas as pd 
 st.markdown("""
     <style>
-    /* 1. La caja cerrada: Fondo muy oscuro y letras BLANCAS INTENSAS */
-    div[data-baseweb="select"] > div {
-        background-color: #000000 !important;
-        border: 2px solid #FFD700 !important; /* Borde dorado para que resalte */
+    /* Caja cerrada: Texto ROJO para probar visibilidad */
+    div[data-baseweb="select"] div {
+        color: #FF0000 !important;
+        font-weight: 900 !important;
+        font-size: 18px !important;
     }
-    div[data-baseweb="select"] span {
-        color: #FFFFFF !important;
-        font-weight: bold !important;
-    }
-    
-    /* 2. La lista que se abre: Fondo blanco puro y letras NEGRAS INTENSAS */
-    div[role="listbox"] {
-        background-color: #FFFFFF !important;
-    }
+    /* Lista abierta: Texto NEGRO sobre fondo BLANCO */
     div[role="option"] {
         color: #000000 !important;
         background-color: #FFFFFF !important;
-        font-weight: bold !important;
+        font-weight: 900 !important;
+        font-size: 18px !important;
     }
     </style>
 """, unsafe_allow_html=True)
