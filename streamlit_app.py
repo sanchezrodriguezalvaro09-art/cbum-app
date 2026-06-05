@@ -5,7 +5,7 @@ import pandas as pd
 st.markdown("""
     <style>
     .stApp {
-        background-color: #0E1117;
+        background-color: #0E1117; 
         color: #FFFFFF;
     }
     div.stButton > button {
