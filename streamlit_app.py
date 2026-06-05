@@ -24,15 +24,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Configuración inicial
-st.set_page_config(page_title="CBum Training App", layout="centered")
-st.title("💪 CBum Training App")
+st.set_page_config(page_title="CBum Elite Training", layout="centered")
+st.markdown("<h1 style='text-align: center; color: #FFD700;'>CBUM ELITE TRAINING</h1>", unsafe_allow_html=True)
 
 # Aquí irán tus llaves de Supabase (las que guardaste antes)
 # URL y KEY las pondremos de forma segura más adelante
 st.write("Bienvenido a tu app de entrenamiento. Configurando base de datos...")
 
 # Módulo de Suplementación Segura
-st.header("💊 Suplementación Segura")
+st.markdown("### 💊 Protocolo de Suplementación")
 peso = st.number_input("Introduce tu peso (kg)", min_value=40, max_value=150, value=70)
 objetivo = st.selectbox("Objetivo", ["Músculo", "Definición"])
 
