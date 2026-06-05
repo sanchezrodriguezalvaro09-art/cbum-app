@@ -1,6 +1,23 @@
 import streamlit as st
 from supabase import create_client
-import pandas as pd
+import pandas as pd 
+# CSS personalizado para un look "Elite"
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #0E1117;
+    }
+    div.stButton > button {
+        background-color: #FFD700;
+        color: black;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+    .stTextInput > label, .stNumberInput > label {
+        color: #FFFFFF;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Configuración inicial
 st.set_page_config(page_title="CBum Training App", layout="centered")
