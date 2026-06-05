@@ -3,19 +3,24 @@ from supabase import create_client
 import pandas as pd 
 st.markdown("""
     <style>
-    /* 1. Fondo del desplegable (caja cerrada) */
+    /* 1. La caja cerrada: Fondo muy oscuro y letras BLANCAS INTENSAS */
     div[data-baseweb="select"] > div {
-        background-color: #1E1E1E !important;
+        background-color: #000000 !important;
+        border: 2px solid #FFD700 !important; /* Borde dorado para que resalte */
     }
-    
-    /* 2. Color del texto dentro de la caja cerrada (lo que está seleccionado) */
-    div[data-baseweb="select"] div[data-testid="stMarkdownContainer"] p {
+    div[data-baseweb="select"] span {
         color: #FFFFFF !important;
+        font-weight: bold !important;
     }
     
-    /* 3. Color del texto en la lista desplegada (opciones) */
+    /* 2. La lista que se abre: Fondo blanco puro y letras NEGRAS INTENSAS */
+    div[role="listbox"] {
+        background-color: #FFFFFF !important;
+    }
     div[role="option"] {
         color: #000000 !important;
+        background-color: #FFFFFF !important;
+        font-weight: bold !important;
     }
     </style>
 """, unsafe_allow_html=True)
