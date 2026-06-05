@@ -1,29 +1,48 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS personalizado para un look "Elite" corregido 
+# CSS personalizado para un look "Elite" - Versión forzada
 st.markdown("""
     <style>
+    /* Fondo general */
     .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
-    }
-    div.stButton > button {
-        background-color: #FFD700;
-        color: black;
-        border-radius: 10px;
-        font-weight: bold;
-    }
-    /* Etiquetas de los campos */
-    .stTextInput > label, .stNumberInput > label, .stSelectbox > label {
+        background-color: #0E1117 !important;
         color: #FFFFFF !important;
     }
-    /* Corrección del fondo y texto del desplegable */
+    
+    /* Botones */
+    div.stButton > button {
+        background-color: #FFD700 !important;
+        color: black !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+    }
+
+    /* Etiquetas */
+    label {
+        color: #FFFFFF !important;
+    }
+
+    /* Solución definitiva para el desplegable (Selectbox) */
     div[data-baseweb="select"] > div {
         background-color: #1E1E1E !important;
         color: #FFFFFF !important;
+        border: 1px solid #444444 !important;
     }
-    /* Títulos y texto general */
+    
+    /* El texto dentro del desplegable cuando se abre */
+    div[role="listbox"] {
+        background-color: #1E1E1E !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Elementos dentro de la lista */
+    div[role="option"] {
+        color: #FFFFFF !important;
+        background-color: #1E1E1E !important;
+    }
+
+    /* Títulos y texto */
     h1, h2, h3, p, div {
         color: #FFFFFF !important;
     }
