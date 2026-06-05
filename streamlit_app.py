@@ -3,21 +3,19 @@ from supabase import create_client
 import pandas as pd 
 st.markdown("""
     <style>
-    /* Forzar fondo oscuro en el desplegable */
+    /* 1. Fondo del desplegable (caja cerrada) */
     div[data-baseweb="select"] > div {
         background-color: #1E1E1E !important;
     }
-    /* Forzar color de texto negro en la opción seleccionada */
-    div[data-baseweb="select"] > div > div > div {
-        color: #000000 !important;
+    
+    /* 2. Color del texto dentro de la caja cerrada (lo que está seleccionado) */
+    div[data-baseweb="select"] div[data-testid="stMarkdownContainer"] p {
+        color: #FFFFFF !important;
     }
-    /* Forzar color de texto negro en las opciones del menú desplegado */
+    
+    /* 3. Color del texto en la lista desplegada (opciones) */
     div[role="option"] {
         color: #000000 !important;
-    }
-    /* Asegurar que las etiquetas sean blancas */
-    label {
-        color: #FFFFFF !important;
     }
     </style>
 """, unsafe_allow_html=True)
