@@ -37,7 +37,28 @@ if st.button("Calcular dosis seguras"):
     st.success(f"Proteína recomendada: {proteina:.0f}g diarios")
     st.info("Creatina: 5g diarios (Monohidrato, estándar de seguridad)")
     st.write("Recuerda: Consulta siempre a un profesional de la salud.")
+# --- Módulo de Entrenamiento Personalizado ---
+st.markdown("---")
+st.subheader(f"Rutina para objetivo: {objetivo}")
 
+# Definimos la rutina maestra
+rutina_completa = {
+    "Pecho": ["Press Inclinado (4x10)", "Press Plano (4x8)", "Fondos (3x12)"],
+    "Espalda": ["Dominadas (4xMax)", "Remo con barra (4x8)", "Jalón al pecho (3x12)"],
+    "Hombro": ["Press Militar (4x8)", "Elevaciones laterales (4x15)", "Pájaros (3x12)"],
+    "Pierna": ["Sentadilla (4x8)", "Prensa (4x12)", "Curl femoral (3x15)"]
+}
+
+# Mostramos la rutina según el objetivo seleccionado
+if objetivo == "Músculo":
+    st.write("🔥 **Enfoque Hipertrofia:** Cargas pesadas, 90s de descanso.")
+elif objetivo == "Definición":
+    st.write("⚡ **Enfoque Definición:** Altas repeticiones, 45s de descanso.")
+
+for grupo, ejercicios in rutina_completa.items():
+    with st.expander(f"Día de {grupo}"):
+        for ej in ejercicios:
+            st.write(f"✅ {ej}")
 # Módulo de Entrenamiento
 st.header("🏋️ Entrenamiento")
 ejercicio = st.selectbox("Elige ejercicio", ["Curl Muñeca", "Elevación Talones", "Press Banca", "Sentadilla"])
