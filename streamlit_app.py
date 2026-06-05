@@ -1,11 +1,11 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS personalizado para un look "Elite"
+# CSS personalizado para un look "Elite" corregido
 st.markdown("""
     <style>
     .stApp {
-        background-color: #0E1117; 
+        background-color: #0E1117;
         color: #FFFFFF;
     }
     div.stButton > button {
@@ -14,9 +14,16 @@ st.markdown("""
         border-radius: 10px;
         font-weight: bold;
     }
+    /* Etiquetas de los campos */
     .stTextInput > label, .stNumberInput > label, .stSelectbox > label {
         color: #FFFFFF !important;
     }
+    /* Corrección del fondo y texto del desplegable */
+    div[data-baseweb="select"] > div {
+        background-color: #1E1E1E !important;
+        color: #FFFFFF !important;
+    }
+    /* Títulos y texto general */
     h1, h2, h3, p, div {
         color: #FFFFFF !important;
     }
