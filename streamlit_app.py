@@ -1,7 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS personalizado para un look "Elite" - Versión forzada
+# CSS personalizado para un look "Elite" - Versión letras visibles
 st.markdown("""
     <style>
     /* Fondo general */
@@ -23,26 +23,17 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* Solución definitiva para el desplegable (Selectbox) */
-    div[data-baseweb="select"] > div {
-        background-color: #1E1E1E !important;
-        color: #FFFFFF !important;
-        border: 1px solid #444444 !important;
-    }
-    
-    /* El texto dentro del desplegable cuando se abre */
-    div[role="listbox"] {
-        background-color: #1E1E1E !important;
+    /* Forzar color de texto en el desplegable (Selectbox) */
+    div[data-baseweb="select"] {
         color: #FFFFFF !important;
     }
     
-    /* Elementos dentro de la lista */
+    /* Forzar texto dentro de la lista de opciones */
     div[role="option"] {
-        color: #FFFFFF !important;
-        background-color: #1E1E1E !important;
+        color: #000000 !important; 
     }
 
-    /* Títulos y texto */
+    /* Títulos y texto general */
     h1, h2, h3, p, div {
         color: #FFFFFF !important;
     }
