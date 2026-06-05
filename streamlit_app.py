@@ -1,33 +1,29 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS para arreglar colores de los desplegables
 st.markdown("""
     <style>
-    /* Fondo general oscuro */
-    .stApp {
-        background-color: #0E1117 !important;
+    /* Forzar fondo oscuro en el desplegable */
+    div[data-baseweb="select"] > div {
+        background-color: #1E1E1E !important;
     }
-    
-    /* Forzar letras negras en los desplegables */
-    div[data-baseweb="select"] div {
+    /* Forzar color de texto negro en la opción seleccionada */
+    div[data-baseweb="select"] > div > div > div {
         color: #000000 !important;
     }
-    
-    /* Etiquetas blancas para que se vean bien */
-    label {
-        color: #FFFFFF !important;
+    /* Forzar color de texto negro en las opciones del menú desplegado */
+    div[role="option"] {
+        color: #000000 !important;
     }
-    
-    /* Textos generales blancos */
-    h1, h2, h3, p, div:not([data-baseweb="select"] div) {
+    /* Asegurar que las etiquetas sean blancas */
+    label {
         color: #FFFFFF !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # Configuración inicial
-st.set_page_config(page_title="CBum Elite Training", layout="centered")
+st.set_page_config(page_title="CBum Elite Training", layout="centered", initial_sidebar_state="collapsed")
 st.markdown("<h1 style='text-align: center; color: #FFD700;'>CBUM ELITE TRAINING</h1>", unsafe_allow_html=True)
 
 # Aquí irán tus llaves de Supabase (las que guardaste antes)
