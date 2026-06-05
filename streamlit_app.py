@@ -1,7 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import pandas as pd 
-# CSS personalizado para un look "Elite" corregido
+# CSS personalizado para un look "Elite" corregido 
 st.markdown("""
     <style>
     .stApp {
