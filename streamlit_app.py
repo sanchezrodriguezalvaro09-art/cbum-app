@@ -161,14 +161,17 @@ else:
 
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Gráficas y Reportes")
-        df = pd.read_sql_query("SELECT fecha, peso_kg, rpe FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
-        if not df.empty: st.line_chart(df[['peso_kg', 'rpe']])
+        try:
+            df = pd.read_sql_query("SELECT fecha, peso_kg, rpe FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
+            if not df.empty: st.line_chart(df.set_index('fecha')[['peso_kg', 'rpe']])
+            else: st.info("Sin registros de entrenamiento aún.")
+        except: st.warning("La base de datos se está sincronizando.")
         
         with st.form("carga"):
             ejer = st.text_input("Ejercicio")
             kilos = st.number_input("Kilos")
             reps = st.number_input("Reps")
-            rpe = st.slider("RPE", 1, 10, 8)
+            rpe = st.slider("RPE (Esfuerzo Percibido 1-10)", 1, 10, 8)
             if st.form_submit_button("Registrar"):
                 c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
                 conn.commit()
@@ -183,8 +186,8 @@ else:
             st.download_button("Descargar PDF", data=pdf_bytes, file_name="informe_atleta.pdf")
 
     elif st.session_state.page == "Sistema":
-        st.subheader("⚙️ Sistema")
-        if st.button("Aplicar Mejora"): st.balloons()
+        st.subheader("⚙️ Centro de Actualización IA")
+        if st.button("Aplicar Mejora Científica"): st.balloons()
     
     elif st.session_state.page == "Chat":
         st.subheader("💬 IA Coach")
