@@ -33,8 +33,6 @@ st.markdown("""
         border-top: 2px solid #0000FF; 
         z-index: 9999;
     }
-    .red-dot { position: absolute; top: -5px; right: 20%; height: 10px; width: 10px; 
-               background-color: red; border-radius: 50%; display: inline-block; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -51,26 +49,11 @@ conn.commit()
 # --- 3. MOTOR IA ELITE ---
 def obtener_estructura_rutina(r):
     return {
-        "Empuje": {
-            "Base": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos en paralelas {r}"],
-            "Accesorios": ["Press inclinado mancuernas", "Elevaciones laterales", "Extensión tríceps cuerda", "Cruces polea", "Facepull"]
-        },
-        "Tracción": {
-            "Base": [f"Dominadas {r}", f"Remo con barra {r}", f"Curl con barra {r}"],
-            "Accesorios": ["Jalón al pecho agarre neutro", "Remo polea baja", "Pájaros (hombro post)", "Curl martillo", "Antebrazo"]
-        },
-        "Pierna": {
-            "Base": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"],
-            "Accesorios": ["Extensiones cuádriceps", "Curl femoral tumbado", "Gemelos de pie", "Hip thrust", "Abdominales con peso"]
-        },
-        "Torso": {
-            "Base": [f"Press Inclinado {r}", f"Remo a una mano {r}", f"Elevaciones Laterales {r}"],
-            "Accesorios": ["Aperturas mancuernas", "Remo al mentón", "Press Francés", "Core colgado", "Pájaros"]
-        },
-        "Fullbody": {
-            "Base": [f"Peso Muerto {r}", f"Press Banca {r}", f"Sentadilla {r}"],
-            "Accesorios": ["Dominadas", "Press Militar", "Curl femoral", "Gemelos", "Core"]
-        }
+        "Empuje": {"Base": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos en paralelas {r}"], "Accesorios": ["Press inclinado mancuernas", "Elevaciones laterales", "Extensión tríceps cuerda", "Cruces polea", "Facepull"]},
+        "Tracción": {"Base": [f"Dominadas {r}", f"Remo con barra {r}", f"Curl con barra {r}"], "Accesorios": ["Jalón al pecho agarre neutro", "Remo polea baja", "Pájaros (hombro post)", "Curl martillo", "Antebrazo"]},
+        "Pierna": {"Base": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"], "Accesorios": ["Extensiones cuádriceps", "Curl femoral tumbado", "Gemelos de pie", "Hip thrust", "Abdominales con peso"]},
+        "Torso": {"Base": [f"Press Inclinado {r}", f"Remo a una mano {r}", f"Elevaciones Laterales {r}"], "Accesorios": ["Aperturas mancuernas", "Remo al mentón", "Press Francés", "Core colgado", "Pájaros"]},
+        "Fullbody": {"Base": [f"Peso Muerto {r}", f"Press Banca {r}", f"Sentadilla {r}"], "Accesorios": ["Dominadas", "Press Militar", "Curl femoral", "Gemelos", "Core"]}
     }
 
 def generar_rutina_ia(obj, dias):
@@ -140,7 +123,7 @@ else:
             with st.expander(dia):
                 st.write("**--- BASE PESADA ---**")
                 for e in contenido["Base"]: st.write(f"✅ {e}")
-                st.write("**--- ACCESORIOS (Volumen Extra) ---**")
+                st.write("**--- ACCESORIOS ---**")
                 for ex in contenido["Accesorios"]: st.checkbox(f"{ex}")
     
     elif st.session_state.page == "Supl":
@@ -162,10 +145,15 @@ else:
             if not df.empty: st.bar_chart(df.set_index('ejercicio'))
         except: st.info("Registra tu primer ejercicio.")
         with st.form("carga"):
-            ejer, kilos = st.text_input("Ejercicio"), st.number_input("Kilos")
+            ejer = st.text_input("Ejercicio")
+            kilos = st.number_input("Kilos", min_value=0.0)
+            reps = st.number_input("Reps", min_value=0)
+            rpe = st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?,?,?,?,?)", (st.session_state.user, ejer, kilos, 10, 8))
-                conn.commit(); st.rerun()
+                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
+                conn.commit()
+                st.success("Guardado correctamente")
+                st.rerun()
 
     elif st.session_state.page == "Sistema":
         st.subheader("⚙️ Configuración")
