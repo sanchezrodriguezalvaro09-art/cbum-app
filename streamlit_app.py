@@ -19,6 +19,8 @@ conn = sqlite3.connect('cbum_elite_final_pro.db', check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
+c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, peso REAL)''')
+c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 conn.commit()
 
 # --- 3. MOTOR IA ELITE ---
@@ -88,10 +90,8 @@ else:
     elif st.session_state.page == "Supl":
         st.subheader("Plan de Suplementación Elite")
         peso, obj = st.session_state.data[3], st.session_state.data[5]
-        # Cálculos precisos
         crea_total = round(peso * 0.05, 1)
         prot_total = round(peso * 1.8, 0)
-        
         suplementos = {
             "Creatina Monohidrato": f"Dosis: {crea_total}g al día. Tomar una sola vez al día (Post-entreno o desayuno).",
             "Proteína Whey": f"Total diario: {prot_total}g de proteína. Tomar 1 o 2 batidos al día dependiendo de tu dieta sólida (Máx. 30g por batido).",
@@ -100,16 +100,20 @@ else:
         }
         if obj == "Definición": suplementos["Multivitamínico"] = "Dosis: 1 cápsula al día con el desayuno."
         if obj == "Fuerza": suplementos["Beta-Alanina"] = "Dosis: 3g al día repartidos en 2 tomas."
-        
         for nombre, desc in suplementos.items():
             with st.expander(f"💊 {nombre}"): st.write(desc)
         st.warning("⚠️ Consulta siempre con tu médico.")
     
     elif st.session_state.page == "Progreso":
-        st.subheader("Tu Evolución")
-    
-    elif st.session_state.page == "Chat":
-        st.subheader("IA Coach")
-        q = st.text_input("Pregunta al Coach:")
-        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
+        st.subheader("📊 Seguimiento de Evolución")
+        nuevo_peso = st.number_input("Registrar peso corporal (kg)", value=float(st.session_state.data[3]))
+        if st.button("Guardar Peso Corporal"):
+            c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
+            conn.commit()
+            st.success("Peso guardado.")
+        st.divider()
+        st.subheader("💪 Registro de Cargas (PRs)")
+        with st.form("carga_form"):
+            ejer = st.text_input("Nombre del Ejercicio (ej: Press Banca)")
+            kilos = st.number_input("Peso levantado (
 
