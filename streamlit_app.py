@@ -88,14 +88,19 @@ else:
     elif st.session_state.page == "Supl":
         st.subheader("Plan de Suplementación Elite")
         peso, obj = st.session_state.data[3], st.session_state.data[5]
+        # Cálculos precisos
+        crea_total = round(peso * 0.05, 1)
+        prot_total = round(peso * 1.8, 0)
+        
         suplementos = {
-            "Creatina Monohidrato": f"{round(peso * 0.05, 1)}g diarios. Recuperación y fuerza pura.",
-            "Proteína Whey": f"Hasta {round((peso * 1.8)/3, 0)}g por batido. Para alcanzar tu meta proteica.",
-            "Omega-3 (EPA/DHA)": "2-3g diarios. Antiinflamatorio articular.",
-            "Magnesio (Bisglicinato)": "300mg antes de dormir. Mejora el sueño y relajación."
+            "Creatina Monohidrato": f"Dosis: {crea_total}g al día. Tomar una sola vez al día (Post-entreno o desayuno).",
+            "Proteína Whey": f"Total diario: {prot_total}g de proteína. Tomar 1 o 2 batidos al día dependiendo de tu dieta sólida (Máx. 30g por batido).",
+            "Omega-3 (EPA/DHA)": "Dosis: 2-3g al día repartidos en 2 tomas con las comidas principales.",
+            "Magnesio (Bisglicinato)": "Dosis: 300mg al día. Tomar una sola toma antes de dormir."
         }
-        if obj == "Definición": suplementos["Multivitamínico"] = "1 al día para cubrir micronutrientes."
-        if obj == "Fuerza": suplementos["Beta-Alanina"] = "3g diarios para rendimiento de alta intensidad."
+        if obj == "Definición": suplementos["Multivitamínico"] = "Dosis: 1 cápsula al día con el desayuno."
+        if obj == "Fuerza": suplementos["Beta-Alanina"] = "Dosis: 3g al día repartidos en 2 tomas."
+        
         for nombre, desc in suplementos.items():
             with st.expander(f"💊 {nombre}"): st.write(desc)
         st.warning("⚠️ Consulta siempre con tu médico.")
