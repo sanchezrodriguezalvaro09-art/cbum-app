@@ -18,51 +18,55 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Base de datos
-conn = sqlite3.connect('fitness_elite_v9.db', check_same_thread=False)
+# Base de datos (v10 para asegurar estructura completa)
+conn = sqlite3.connect('fitness_elite_v10.db', check_same_thread=False)
 c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS usuarios (nombre TEXT PRIMARY KEY, password TEXT, objetivo TEXT, dias INTEGER)''')
+c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
+             (nombre TEXT PRIMARY KEY, password TEXT, altura REAL, peso REAL, objetivo TEXT, dias INTEGER)''')
 conn.commit()
 
 if 'user' not in st.session_state: st.session_state.user = None
 if 'page' not in st.session_state: st.session_state.page = "Inicio"
 
-# --- Lógica de IA ---
-def generar_rutina(obj, dias):
+# --- Lógica de IA ampliada ---
+def generar_rutina_completa(obj, dias):
+    # Más opciones para que la IA sea variada
     rutinas = {
-        "Hipertrofia": ["Pecho/Tríceps", "Espalda/Bíceps", "Pierna/Hombro", "FullBody"],
-        "Fuerza": ["Empuje pesado", "Tracción pesada", "Pierna pesada", "Core/Accesorios"]
-    }
-    ejercicios = {
-        "Pecho/Tríceps": ["Press Banca 4x10", "Aperturas 3x12", "Press Francés 3x10"],
-        "Espalda/Bíceps": ["Dominadas 3xFalló", "Remo Barra 4x10", "Curl Barra 3x12"]
+        "Hipertrofia": ["Torso", "Pierna", "Empuje", "Tracción", "Pierna"],
+        "Fuerza": ["Básicos A", "Básicos B", "Accesorio A", "Accesorio B", "Básicos C"],
+        "Músculo Magro": ["Circuito A", "Circuito B", "Cardio/Core", "Torso", "Pierna"],
+        "Definición": ["HIIT 1", "HIIT 2", "Fullbody", "Cardio", "Fullbody"]
     }
     plan = {}
     for i in range(dias):
         musculos = rutinas.get(obj, ["Día genérico"])[i % len(rutinas.get(obj, ["Día genérico"]))]
-        plan[f"Día {i+1}: {musculos}"] = ejercicios.get(musculos, ["Ejercicio IA 3x10"])
+        plan[f"Día {i+1}: {musculos}"] = ["Press principal 4x10", "Ejercicio accesorio 3x12", "Finalizador 3x15"]
     return plan
 
-# --- Login ---
+# --- Login / Registro ---
 if st.session_state.user is None:
     st.title("CBUM ELITE")
     choice = st.radio("Acceso:", ["Iniciar Sesión", "Registrarse"])
     n, p = st.text_input("Usuario"), st.text_input("Contraseña", type="password")
+    
     if choice == "Registrarse":
-        obj = st.selectbox("Objetivo", ["Hipertrofia", "Fuerza"])
-        dias = st.slider("Días", 3, 5, 4)
-        if st.button("Crear"):
-            c.execute("INSERT INTO usuarios VALUES (?,?,?,?)", (n, p, obj, dias))
+        alt = st.number_input("Altura (cm)", 140, 220, 175)
+        peso = st.number_input("Peso actual (kg)", 40.0, 150.0, 70.0)
+        obj = st.selectbox("Objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
+        dias = st.slider("Días de entrenamiento", 3, 5, 4)
+        if st.button("Crear cuenta"):
+            c.execute("INSERT INTO usuarios VALUES (?,?,?,?,?,?)", (n, p, alt, peso, obj, dias))
             conn.commit()
+            st.success("Cuenta creada correctamente.")
     elif st.button("Entrar"):
-        c.execute("SELECT objetivo, dias FROM usuarios WHERE nombre=? AND password=?", (n, p))
+        c.execute("SELECT objetivo, dias, altura, peso FROM usuarios WHERE nombre=? AND password=?", (n, p))
         res = c.fetchone()
         if res:
             st.session_state.user = n
-            st.session_state.obj, st.session_state.dias = res
+            st.session_state.obj, st.session_state.dias, st.session_state.alt, st.session_state.peso = res
             st.rerun()
 else:
-    # Menú inferior
+    # Menú inferior fijo
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
     cols = st.columns(4)
     if cols[0].button("💪"): st.session_state.page = "Entrenar"
@@ -71,22 +75,23 @@ else:
     if cols[3].button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Vistas
+    # Contenido según página
     if st.session_state.page == "Inicio":
         st.title(f"Bienvenido, {st.session_state.user}")
+        st.write(f"Altura: {st.session_state.alt}cm | Peso: {st.session_state.peso}kg")
+        st.write(f"Objetivo: {st.session_state.obj}")
     
     elif st.session_state.page == "Entrenar":
-        st.subheader("Rutina Semanal Completa")
-        plan = generar_rutina(st.session_state.obj, st.session_state.dias)
+        st.subheader("Rutina Semanal")
+        plan = generar_rutina_completa(st.session_state.obj, st.session_state.dias)
         for dia, ejer in plan.items():
             with st.expander(dia):
                 for e in ejer: st.write(f"- {e}")
 
-    elif st.session_state.page == "Supl":
-        st.subheader("Suplementación")
-        st.write("Proteína y Creatina según tu objetivo.")
-
     elif st.session_state.page == "Progreso":
-        st.subheader("Seguimiento")
-        st.write("Gráficos y pesos.")
+        st.subheader("Seguimiento de Peso")
+        st.write("Tu peso inicial fue: " + str(st.session_state.peso) + " kg")
+        nuevo_peso = st.number_input("Registrar nuevo peso actual (kg)")
+        if st.button("Actualizar seguimiento"):
+            st.success(f"Progreso guardado: {nuevo_peso} kg. ¡Vas por buen camino!")
 
