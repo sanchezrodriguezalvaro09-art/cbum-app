@@ -21,7 +21,6 @@ st.markdown("""
     .stButton button:hover { transform: scale(1.05); background: #0000FF; }
     h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
     
-    /* MENÚ FIJO INFERIOR CORREGIDO */
     .fixed-menu { 
         position: fixed; 
         bottom: 0; 
@@ -67,41 +66,36 @@ def generar_rutina_ia(obj, dias, historial_fuerza):
     rango = {"Hipertrofia": "4x10-12", "Fuerza": "5x3-5", "Músculo Magro": "3x10-15", "Definición": "4x15-20"}
     r = rango.get(obj, "3x12")
     
-    if variante == "Avanzada":
-        ejercicios_pro = {
-            "Empuje": [f"Press Banca con Pausa {r}", f"Press Militar tras nuca {r}", f"Fondos en paralelas {r}", f"Extensiones polea {r}"],
-            "Tracción": [f"Dominadas lastradas {r}", f"Remo Pendlay {r}", f"Curl Predicador {r}", f"Curl martillo {r}"],
-            "Pierna": [f"Sentadilla Zercher {r}", f"Prensa unilateral {r}", f"Peso muerto rumano {r}", f"Gemelos donkey {r}"],
-            "Torso": [f"Press declinado {r}", f"Remo a una mano {r}", f"Elevaciones laterales inclinado {r}", f"Abdominales colgado {r}"],
-            "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
-        }
-    else:
-        ejercicios_pro = {
-            "Empuje": [f"Press Banca {r}", f"Press Militar {r}", f"Aperturas {r}", f"Press Francés {r}"],
-            "Tracción": [f"Dominadas {r}", f"Remo con Barra {r}", f"Curl con Barra {r}", f"Curl Inverso {r}"],
-            "Pierna": [f"Sentadilla {r}", f"Prensa {r}", f"Curl Femoral {r}", f"Gemelos {r}", f"Crunch Abdomen {r}"],
-            "Torso": [f"Press Inclinado {r}", f"Jalón al pecho {r}", f"Elevaciones Laterales {r}", f"Plancha {r}"],
-            "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
-        }
+    ejercicios_base = {
+        "Empuje": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos {r}"],
+        "Tracción": [f"Dominadas {r}", f"Remo Barra {r}", f"Curl Bíceps {r}"],
+        "Pierna": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"],
+        "Torso": [f"Press Inclinado {r}", f"Jalón al pecho {r}", f"Elevaciones Laterales {r}"],
+        "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}"]
+    }
+    opcionales = {
+        "Empuje": ["Cruces polea", "Elev. frontales", "Ext. tríceps"],
+        "Tracción": ["Facepull", "Pájaros", "Curl martillo"],
+        "Pierna": ["Curl femoral", "Ext. cuádriceps", "Gemelos"],
+        "Torso": ["Flexiones", "Remo mentón", "Plancha"],
+        "Fullbody": ["Burpees", "Saltos cajón", "Abdominales"]
+    }
     estructura = {3: ["Empuje", "Tracción", "Pierna"], 4: ["Torso", "Pierna", "Empuje", "Tracción"], 5: ["Empuje", "Tracción", "Pierna", "Torso", "Fullbody"]}
     plan = {}
     dias_sel = estructura.get(dias, estructura[3])
     for i, tipo in enumerate(dias_sel):
-        plan[f"Día {i+1}: {tipo}"] = ejercicios_pro[tipo]
+        plan[f"Día {i+1}: {tipo}"] = {"base": ejercicios_base[tipo], "extras": opcionales[tipo]}
     return plan
 
 def generar_dieta_semanal(peso, objetivo):
     dieta = {
-        "Desayuno": ["Avena (80g)", "Huevos (3 unidades)", "Fruta (1 pieza)"],
-        "Almuerzo": ["Yogur griego (200g)", "Nueces (30g)"],
-        "Comida": ["Arroz (100g en crudo)", "Pechuga de Pollo (200g)", "Verdura (150g)"],
-        "Merienda": ["Batido de Proteína", "Plátano (1 unidad)"],
-        "Cena": ["Pescado blanco (200g)", "Patata cocida (200g)", "Ensalada verde"]
+        "Desayuno": ["Avena (80g)", "Huevos (3 unidades)", "Fruta"],
+        "Almuerzo": ["Yogur griego", "Nueces"],
+        "Comida": ["Arroz (100g)", "Pollo (200g)", "Verdura"],
+        "Merienda": ["Batido Proteína", "Plátano"],
+        "Cena": ["Pescado (200g)", "Patata (200g)", "Ensalada"]
     }
-    lista = {
-        "Pechuga de Pollo": "1.4kg", "Arroz": "700g", "Avena": "560g", 
-        "Huevos": "21 unidades", "Pescado": "1.4kg", "Patatas": "1.4kg"
-    }
+    lista = {"Pollo": "1.4kg", "Arroz": "700g", "Avena": "560g", "Huevos": "21 un", "Pescado": "1.4kg", "Patatas": "1.4kg"}
     return dieta, lista
 
 # --- 4. GESTIÓN SESIÓN ---
@@ -129,13 +123,10 @@ if not st.session_state.user:
                 c.execute("SELECT * FROM usuarios WHERE nombre=? AND pass=?", (un, up))
                 user = c.fetchone()
                 if user:
-                    st.session_state.user = user[1]
-                    st.session_state.data = user
-                    st.rerun()
+                    st.session_state.user = user[1]; st.session_state.data = user; st.rerun()
 else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
-    # MENÚ FIJO INFERIOR
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     if c1.button("💪"): st.session_state.page = "Entrenar"
@@ -147,68 +138,37 @@ else:
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.page == "Entrenar":
-        c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=?", (st.session_state.user,))
-        historial = c.fetchall()
+        historial = c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=?", (st.session_state.user,)).fetchall()
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
         plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial)
-        for dia, ejer in plan.items():
+        for dia, contenido in plan.items():
             with st.expander(dia):
-                for e in ejer:
-                    st.write(f"✅ {e}")
-                    nombre_busqueda = "".join([i for i in e.split("4x")[0].split("5x")[0].split("3x")[0] if i.isalpha() or i == " "]).strip()
-                    for clave in imagenes_ejercicios:
-                        if clave.lower() in nombre_busqueda.lower():
-                            st.image(imagenes_ejercicios[clave], width=200)
-                            break
+                for e in contenido["base"]: st.write(f"✅ {e}")
+                st.write("--- Opcionales ---")
+                for ex in contenido["extras"]: st.checkbox(f"Accesorios: {ex}")
     
     elif st.session_state.page == "Supl":
-        st.subheader("Plan de Suplementación Elite")
-        peso = st.session_state.data[3]
-        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día", "Omega-3": "2-3g/día", "Magnesio": "300mg/día"}
-        for n, d in suplementos.items():
-            with st.expander(f"💊 {n}"): st.write(d)
+        st.subheader("Plan Suplementación")
+        for n, d in {"Creatina": "5g", "Proteína": "30g"}.items(): st.write(f"💊 {n}: {d}")
     
     elif st.session_state.page == "Nutricion":
-        st.subheader("🥑 Dieta IA y Compra Semanal")
-        if st.button("Generar Plan Semanal y Lista de la Compra"):
+        st.subheader("🥑 Dieta y Compra")
+        if st.button("Generar Plan"):
             dieta, lista = generar_dieta_semanal(st.session_state.data[3], st.session_state.data[5])
-            for comida, alimentos in dieta.items():
-                with st.expander(f"{comida}"):
-                    for ali in alimentos: st.write(f"- {ali}")
-            st.divider()
-            st.subheader("🛒 Lista de la compra")
-            for art, cant in lista.items(): st.write(f"**{art}**: {cant}")
+            for k, v in dieta.items(): st.write(f"**{k}**: {v}")
+            st.subheader("🛒 Lista")
+            for k, v in lista.items(): st.write(f"{k}: {v}")
 
     elif st.session_state.page == "Progreso":
-        st.subheader("📊 Gráficas y Reportes")
-        try:
-            df = pd.read_sql_query("SELECT fecha, peso_kg, rpe FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
-            if not df.empty: st.line_chart(df.set_index('fecha')[['peso_kg', 'rpe']])
-            else: st.info("Sin registros de entrenamiento aún.")
-        except: st.warning("La base de datos se está sincronizando.")
-        
+        st.subheader("📊 Progreso")
         with st.form("carga"):
-            ejer = st.text_input("Ejercicio")
-            kilos = st.number_input("Kilos")
-            reps = st.number_input("Reps")
-            rpe = st.slider("RPE (Esfuerzo Percibido 1-10)", 1, 10, 8)
+            ejer, kilos = st.text_input("Ejercicio"), st.number_input("Kilos")
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
-                conn.commit()
-                st.rerun()
-
-        if st.button("Exportar Informe PDF"):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Informe de Atleta: {st.session_state.user}", ln=True, align='C')
-            pdf_bytes = pdf.output(dest='S').encode('latin-1')
-            st.download_button("Descargar PDF", data=pdf_bytes, file_name="informe_atleta.pdf")
+                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?,?,?,?,?)", (st.session_state.user, ejer, kilos, 10, 8))
+                conn.commit(); st.rerun()
 
     elif st.session_state.page == "Sistema":
-        st.subheader("⚙️ Centro de Actualización IA")
-        if st.button("Aplicar Mejora Científica"): st.balloons()
+        if st.button("Actualizar"): st.balloons()
     
     elif st.session_state.page == "Chat":
-        st.subheader("💬 IA Coach")
         st.text_input("Pregunta al Coach:")
