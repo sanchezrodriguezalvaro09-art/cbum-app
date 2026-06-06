@@ -42,7 +42,7 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
 c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, peso REAL)''')
-c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, rpe INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios_v2 (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, rpe INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 c.execute('''CREATE TABLE IF NOT EXISTS diario_nutricion (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, calorias REAL, info TEXT)''')
 conn.commit()
 
@@ -141,7 +141,7 @@ else:
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Historial y Registro")
         try:
-            df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
+            df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios_v2 WHERE usuario=?", conn, params=(st.session_state.user,))
             if not df.empty: st.bar_chart(df.set_index('ejercicio'))
         except: st.info("Registra tu primer ejercicio.")
         with st.form("carga"):
@@ -150,7 +150,7 @@ else:
             reps = st.number_input("Reps", min_value=0)
             rpe = st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
+                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
                 conn.commit()
                 st.success("Guardado correctamente")
                 st.rerun()
