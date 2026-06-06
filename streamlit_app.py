@@ -23,17 +23,41 @@ c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIME
 c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 conn.commit()
 
-# --- 3. MOTOR IA ELITE ---
-def generar_rutina_ia(obj, dias):
+# --- 3. MOTOR IA ELITE (CON ADAPTACIÓN Y CATÁLOGO DE IMÁGENES) ---
+imagenes_ejercicios = {
+    "Press Banca": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-bench-press_1.png",
+    "Press Militar": "https://www.exercises.com.au/wp-content/uploads/2015/05/Standing-military-press_1.png",
+    "Sentadilla": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-squat_1.png",
+    "Dominadas": "https://www.exercises.com.au/wp-content/uploads/2015/05/Pull-up_1.png",
+    "Remo con Barra": "https://www.exercises.com.au/wp-content/uploads/2015/05/Bent-over-row_1.png",
+    "Curl con Barra": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-curl_1.png"
+}
+
+def generar_rutina_ia(obj, dias, historial_fuerza):
+    variante = "Estándar"
+    if len(historial_fuerza) >= 5:
+        pesos = [h[1] for h in historial_fuerza[:5]]
+        if all(x <= pesos[0] for x in pesos[1:]): variante = "Avanzada"
+
     rango = {"Hipertrofia": "4x10-12", "Fuerza": "5x3-5", "Músculo Magro": "3x10-15", "Definición": "4x15-20"}
     r = rango.get(obj, "3x12")
-    ejercicios_pro = {
-        "Empuje": [f"Press Banca {r}", f"Press Militar {r}", f"Aperturas {r}", f"Press Francés {r}"],
-        "Tracción": [f"Dominadas {r}", f"Remo con Barra {r}", f"Curl con Barra {r}", f"Curl Inverso (Antebrazo) {r}"],
-        "Pierna": [f"Sentadilla {r}", f"Prensa {r}", f"Curl Femoral {r}", f"Gemelos {r}", f"Crunch Abdomen {r}"],
-        "Torso": [f"Press Inclinado {r}", f"Jalón al pecho {r}", f"Elevaciones Laterales {r}", f"Plancha {r}"],
-        "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
-    }
+    
+    if variante == "Avanzada":
+        ejercicios_pro = {
+            "Empuje": [f"Press Banca con Pausa {r}", f"Press Militar tras nuca {r}", f"Fondos en paralelas {r}", f"Extensiones polea {r}"],
+            "Tracción": [f"Dominadas lastradas {r}", f"Remo Pendlay {r}", f"Curl Predicador {r}", f"Curl martillo {r}"],
+            "Pierna": [f"Sentadilla Zercher {r}", f"Prensa unilateral {r}", f"Peso muerto rumano {r}", f"Gemelos donkey {r}"],
+            "Torso": [f"Press declinado {r}", f"Remo a una mano {r}", f"Elevaciones laterales inclinado {r}", f"Abdominales colgado {r}"],
+            "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
+        }
+    else:
+        ejercicios_pro = {
+            "Empuje": [f"Press Banca {r}", f"Press Militar {r}", f"Aperturas {r}", f"Press Francés {r}"],
+            "Tracción": [f"Dominadas {r}", f"Remo con Barra {r}", f"Curl con Barra {r}", f"Curl Inverso {r}"],
+            "Pierna": [f"Sentadilla {r}", f"Prensa {r}", f"Curl Femoral {r}", f"Gemelos {r}", f"Crunch Abdomen {r}"],
+            "Torso": [f"Press Inclinado {r}", f"Jalón al pecho {r}", f"Elevaciones Laterales {r}", f"Plancha {r}"],
+            "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
+        }
     estructura = {3: ["Empuje", "Tracción", "Pierna"], 4: ["Torso", "Pierna", "Empuje", "Tracción"], 5: ["Empuje", "Tracción", "Pierna", "Torso", "Fullbody"]}
     plan = {}
     dias_sel = estructura.get(dias, estructura[3])
@@ -57,7 +81,7 @@ if not st.session_state.user:
                 try:
                     c.execute("INSERT INTO usuarios (nombre, pass, peso, altura, objetivo, dias) VALUES (?,?,?,?,?,?)", (n, p, pes, alt, obj, dias))
                     conn.commit()
-                    st.success("Registrado. ¡Entra ahora!")
+                    st.success("Registrado.")
                 except: st.error("Usuario existe.")
     with tab1:
         with st.form("login"):
@@ -81,54 +105,41 @@ else:
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.page == "Entrenar":
+        c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=?", (st.session_state.user,))
+        historial = c.fetchall()
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
-        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
+        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial)
         for dia, ejer in plan.items():
             with st.expander(dia):
-                for e in ejer: st.write(f"✅ {e}")
+                for e in ejer:
+                    nombre_base = e.split(" ")[0] + (" " + e.split(" ")[1] if len(e.split(" ")) > 1 and "4x" not in e.split(" ")[1] else "")
+                    st.write(f"✅ {e}")
+                    if nombre_base in imagenes_ejercicios:
+                        st.image(imagenes_ejercicios[nombre_base], width=150)
     
     elif st.session_state.page == "Supl":
         st.subheader("Plan de Suplementación Elite")
         peso, obj = st.session_state.data[3], st.session_state.data[5]
-        crea_total = round(peso * 0.05, 1)
-        prot_total = round(peso * 1.8, 0)
-        suplementos = {
-            "Creatina Monohidrato": f"Dosis: {crea_total}g al día. Tomar una sola vez al día (Post-entreno o desayuno).",
-            "Proteína Whey": f"Total diario: {prot_total}g de proteína. Tomar 1 o 2 batidos al día dependiendo de tu dieta sólida (Máx. 30g por batido).",
-            "Omega-3 (EPA/DHA)": "Dosis: 2-3g al día repartidos en 2 tomas con las comidas principales.",
-            "Magnesio (Bisglicinato)": "Dosis: 300mg al día. Tomar una sola toma antes de dormir."
-        }
-        if obj == "Definición": suplementos["Multivitamínico"] = "Dosis: 1 cápsula al día con el desayuno."
-        if obj == "Fuerza": suplementos["Beta-Alanina"] = "Dosis: 3g al día repartidos en 2 tomas."
-        for nombre, desc in suplementos.items():
-            with st.expander(f"💊 {nombre}"): st.write(desc)
-        st.warning("⚠️ Consulta siempre con tu médico.")
+        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día"}
+        for n, d in suplementos.items():
+            with st.expander(f"💊 {n}"): st.write(d)
     
     elif st.session_state.page == "Progreso":
-        st.subheader("📊 Seguimiento de Evolución")
-        nuevo_peso = st.number_input("Registrar peso corporal (kg)", value=float(st.session_state.data[3]))
-        if st.button("Guardar Peso Corporal"):
+        st.subheader("📊 Seguimiento")
+        nuevo_peso = st.number_input("Peso actual", value=float(st.session_state.data[3]))
+        if st.button("Guardar"):
             c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
             conn.commit()
-            st.success("Peso guardado.")
         st.divider()
-        st.subheader("💪 Registro de Cargas (PRs)")
-        with st.form("carga_form"):
-            ejer = st.text_input("Nombre del Ejercicio (ej: Press Banca)")
-            kilos = st.number_input("Peso levantado (kg)")
-            reps = st.number_input("Repeticiones", min_value=1, max_value=50, value=10)
-            if st.form_submit_button("Registrar Serie"):
+        with st.form("carga"):
+            ejer = st.text_input("Ejercicio")
+            kilos = st.number_input("Kilos")
+            reps = st.number_input("Reps")
+            if st.form_submit_button("Registrar"):
                 c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps) VALUES (?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps))
                 conn.commit()
-                st.success("¡Progreso registrado! A por la siguiente sesión.")
-        st.divider()
-        st.write("### Tu Historial de Fuerza")
-        c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=? ORDER BY peso_kg DESC", (st.session_state.user,))
-        prs = c.fetchall()
-        if prs:
-            for p in prs[:5]: st.write(f"✅ **{p[0]}**: {p[1]}kg x {p[2]} reps")
-        else: st.write("Registra tus series para ver tu evolución de fuerza.")
-    
+                st.rerun()
+
     elif st.session_state.page == "Chat":
         st.subheader("IA Coach")
         q = st.text_input("Pregunta al Coach:")
