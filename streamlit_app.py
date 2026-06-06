@@ -108,4 +108,41 @@ else:
         c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=?", (st.session_state.user,))
         historial = c.fetchall()
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
-        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial
+        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial)
+        for dia, ejer in plan.items():
+            with st.expander(dia):
+                for e in ejer:
+                    st.write(f"✅ {e}")
+                    nombre_busqueda = "".join([i for i in e.split("4x")[0].split("5x")[0].split("3x")[0] if i.isalpha() or i == " "]).strip()
+                    for clave in imagenes_ejercicios:
+                        if clave.lower() in nombre_busqueda.lower():
+                            st.image(imagenes_ejercicios[clave], width=200)
+                            break
+    
+    elif st.session_state.page == "Supl":
+        st.subheader("Plan de Suplementación Elite")
+        peso, obj = st.session_state.data[3], st.session_state.data[5]
+        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día"}
+        for n, d in suplementos.items():
+            with st.expander(f"💊 {n}"): st.write(d)
+    
+    elif st.session_state.page == "Progreso":
+        st.subheader("📊 Seguimiento")
+        nuevo_peso = st.number_input("Peso actual", value=float(st.session_state.data[3]))
+        if st.button("Guardar"):
+            c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
+            conn.commit()
+        st.divider()
+        with st.form("carga"):
+            ejer = st.text_input("Ejercicio")
+            kilos = st.number_input("Kilos")
+            reps = st.number_input("Reps")
+            if st.form_submit_button("Registrar"):
+                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps) VALUES (?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps))
+                conn.commit()
+                st.rerun()
+
+    elif st.session_state.page == "Chat":
+        st.subheader("IA Coach")
+        q = st.text_input("Pregunta al Coach:")
+        if q: st.write("IA: Si no progresas, tu cuerpo pide un nuevo estímulo.")
