@@ -115,5 +115,22 @@ else:
         st.subheader("💪 Registro de Cargas (PRs)")
         with st.form("carga_form"):
             ejer = st.text_input("Nombre del Ejercicio (ej: Press Banca)")
-            kilos = st.number_input("Peso levantado (
+            kilos = st.number_input("Peso levantado (kg)")
+            reps = st.number_input("Repeticiones", min_value=1, max_value=50, value=10)
+            if st.form_submit_button("Registrar Serie"):
+                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps) VALUES (?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps))
+                conn.commit()
+                st.success("¡Progreso registrado! A por la siguiente sesión.")
+        st.divider()
+        st.write("### Tu Historial de Fuerza")
+        c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=? ORDER BY peso_kg DESC", (st.session_state.user,))
+        prs = c.fetchall()
+        if prs:
+            for p in prs[:5]: st.write(f"✅ **{p[0]}**: {p[1]}kg x {p[2]} reps")
+        else: st.write("Registra tus series para ver tu evolución de fuerza.")
+    
+    elif st.session_state.page == "Chat":
+        st.subheader("IA Coach")
+        q = st.text_input("Pregunta al Coach:")
+        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
 
