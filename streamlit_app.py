@@ -8,12 +8,21 @@ import io
 st.set_page_config(page_title="CBum Elite Pro", layout="centered")
 st.markdown("""
     <style>
-    .stApp { background: #000000; color: #FFD700; }
+    .stApp { background: #050505; color: #FFFFFF; font-family: 'Helvetica', sans-serif; }
+    .stExpander { background: #121212 !important; border: 1px solid #333 !important; border-radius: 12px !important; }
+    .stButton button { 
+        background: linear-gradient(90deg, #0000FF, #000044); 
+        color: white; 
+        border: none; 
+        border-radius: 8px; 
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .stButton button:hover { transform: scale(1.05); background: #0000FF; }
+    h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
     .fixed-menu { position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; 
                   padding: 15px; display: flex; justify-content: space-around; 
                   border-top: 2px solid #0000FF; z-index: 999; }
-    .stButton button { color: #FFD700; background-color: #111; border: 1px solid #0000FF; width: 100%; }
-    h1, h2 { color: #FFD700 !important; }
     .red-dot { position: absolute; top: -5px; right: 20%; height: 10px; width: 10px; 
                background-color: red; border-radius: 50%; display: inline-block; }
     </style>
