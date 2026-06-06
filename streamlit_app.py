@@ -23,14 +23,14 @@ c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIME
 c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
 conn.commit()
 
-# --- 3. MOTOR IA ELITE (CON ADAPTACIÓN Y CATÁLOGO DE IMÁGENES) ---
+# --- 3. MOTOR IA ELITE ---
 imagenes_ejercicios = {
     "Press Banca": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-bench-press_1.png",
     "Press Militar": "https://www.exercises.com.au/wp-content/uploads/2015/05/Standing-military-press_1.png",
     "Sentadilla": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-squat_1.png",
     "Dominadas": "https://www.exercises.com.au/wp-content/uploads/2015/05/Pull-up_1.png",
-    "Remo con Barra": "https://www.exercises.com.au/wp-content/uploads/2015/05/Bent-over-row_1.png",
-    "Curl con Barra": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-curl_1.png"
+    "Remo": "https://www.exercises.com.au/wp-content/uploads/2015/05/Bent-over-row_1.png",
+    "Curl": "https://www.exercises.com.au/wp-content/uploads/2015/05/Barbell-curl_1.png"
 }
 
 def generar_rutina_ia(obj, dias, historial_fuerza):
@@ -108,40 +108,4 @@ else:
         c.execute("SELECT ejercicio, peso_kg, reps FROM historial_ejercicios WHERE usuario=?", (st.session_state.user,))
         historial = c.fetchall()
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
-        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial)
-        for dia, ejer in plan.items():
-            with st.expander(dia):
-                for e in ejer:
-                    nombre_base = e.split(" ")[0] + (" " + e.split(" ")[1] if len(e.split(" ")) > 1 and "4x" not in e.split(" ")[1] else "")
-                    st.write(f"✅ {e}")
-                    if nombre_base in imagenes_ejercicios:
-                        st.image(imagenes_ejercicios[nombre_base], width=150)
-    
-    elif st.session_state.page == "Supl":
-        st.subheader("Plan de Suplementación Elite")
-        peso, obj = st.session_state.data[3], st.session_state.data[5]
-        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día"}
-        for n, d in suplementos.items():
-            with st.expander(f"💊 {n}"): st.write(d)
-    
-    elif st.session_state.page == "Progreso":
-        st.subheader("📊 Seguimiento")
-        nuevo_peso = st.number_input("Peso actual", value=float(st.session_state.data[3]))
-        if st.button("Guardar"):
-            c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
-            conn.commit()
-        st.divider()
-        with st.form("carga"):
-            ejer = st.text_input("Ejercicio")
-            kilos = st.number_input("Kilos")
-            reps = st.number_input("Reps")
-            if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps) VALUES (?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps))
-                conn.commit()
-                st.rerun()
-
-    elif st.session_state.page == "Chat":
-        st.subheader("IA Coach")
-        q = st.text_input("Pregunta al Coach:")
-        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
-
+        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6], historial
