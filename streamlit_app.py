@@ -104,11 +104,6 @@ if not st.session_state.user:
                 if user:
                     st.session_state.user = user[1]; st.session_state.data = user; st.rerun()
 else:
-    peso = st.session_state.data[3]
-    dias_entreno = st.session_state.data[6]
-    dosis_creatina = round(peso * 0.07, 1)
-    dosis_proteina = "40g" if dias_entreno >= 4 else "25g"
-
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
@@ -133,15 +128,29 @@ else:
     
     elif st.session_state.page == "Supl":
         st.subheader("💊 Plan de Suplementación Personalizado")
-        st.write(f"Basado en tu peso de **{peso}kg** y **{dias_entreno} días** de entreno:")
+        peso_usuario = st.session_state.data[3]
+        dias_usuario = st.session_state.data[6]
+        # Fórmulas de cálculo ajustadas
+        creatina = round(peso_usuario * 0.05, 1)
+        proteina = round(peso_usuario * 0.4, 0)
+        
         suplementos = {
-            "Creatina Monohidrato": {"Dosis": f"{dosis_creatina}g diarios", "Beneficio": "Optimizado para tu masa corporal. Mejora fuerza y volumen celular."},
-            "Proteína Whey": {"Dosis": f"{dosis_proteina} post-entreno", "Beneficio": "Dosis ajustada a tu alta frecuencia de entrenamiento para máxima recuperación."},
-            "Omega-3": {"Dosis": "2g diarios", "Beneficio": "Salud articular y control de inflamación sistémica."}
+            "Creatina Monohidrato": {
+                "Dosis": f"{creatina}g diarios", 
+                "Beneficio": "Mejora la fuerza explosiva y la hidratación muscular, dosificado según tu peso corporal."
+            },
+            "Proteína Whey": {
+                "Dosis": f"{int(proteina)}g post-entreno", 
+                "Beneficio": "Aporte rápido de aminoácidos para la síntesis proteica post-entrenamiento."
+            },
+            "Omega-3": {
+                "Dosis": "2g diarios (1g comida, 1g cena)", 
+                "Beneficio": "Regulador de la inflamación sistémica, clave para la salud articular."
+            }
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
-                st.write(f"**Dosis personalizada:** {info['Dosis']}")
+                st.write(f"**Dosis:** {info['Dosis']}")
                 st.write(f"**¿Qué aporta?:** {info['Beneficio']}")
     
     elif st.session_state.page == "Nutricion":
@@ -159,11 +168,15 @@ else:
             if not df.empty: st.bar_chart(df.set_index('ejercicio'))
         except: st.info("Registra tu primer ejercicio.")
         with st.form("carga"):
-            ejer, kilos = st.text_input("Ejercicio"), st.number_input("Kilos", min_value=0.0)
-            reps, rpe = st.number_input("Reps", min_value=0), st.slider("RPE", 1, 10, 8)
+            ejer = st.text_input("Ejercicio")
+            kilos = st.number_input("Kilos", min_value=0.0)
+            reps = st.number_input("Reps", min_value=0)
+            rpe = st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?,?,?,?,?)", (st.session_state.user, ejer, kilos, reps, rpe))
-                conn.commit(); st.rerun()
+                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
+                conn.commit()
+                st.success("Guardado correctamente")
+                st.rerun()
 
     elif st.session_state.page == "Sistema":
         st.subheader("⚙️ Configuración")
