@@ -20,9 +20,20 @@ st.markdown("""
     }
     .stButton button:hover { transform: scale(1.05); background: #0000FF; }
     h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
-    .fixed-menu { position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; 
-                  padding: 15px; display: flex; justify-content: space-around; 
-                  border-top: 2px solid #0000FF; z-index: 999; }
+    
+    /* MENÚ FIJO INFERIOR CORREGIDO */
+    .fixed-menu { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        background: #0a0a0a; 
+        padding: 10px 0; 
+        display: flex; 
+        justify-content: space-around; 
+        border-top: 2px solid #0000FF; 
+        z-index: 9999;
+    }
     .red-dot { position: absolute; top: -5px; right: 20%; height: 10px; width: 10px; 
                background-color: red; border-radius: 50%; display: inline-block; }
     </style>
@@ -124,6 +135,7 @@ if not st.session_state.user:
 else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
+    # MENÚ FIJO INFERIOR
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     if c1.button("💪"): st.session_state.page = "Entrenar"
@@ -131,7 +143,6 @@ else:
     if c3.button("📈"): st.session_state.page = "Progreso"
     if c4.button("🥑"): st.session_state.page = "Nutricion"
     if c5.button("⚙️"): st.session_state.page = "Sistema"
-    st.markdown('<span class="red-dot"></span>', unsafe_allow_html=True)
     if c6.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
