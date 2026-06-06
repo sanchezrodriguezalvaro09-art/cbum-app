@@ -21,13 +21,10 @@ c.execute('''CREATE TABLE IF NOT EXISTS usuarios
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
 conn.commit()
 
-# --- 3. MOTOR IA ELITE (ADAPTACIÓN DE RUTINAS) ---
+# --- 3. MOTOR IA ELITE ---
 def generar_rutina_ia(obj, dias):
-    # RANGOS según objetivo
     rango = {"Hipertrofia": "4x10-12", "Fuerza": "5x3-5", "Músculo Magro": "3x10-15", "Definición": "4x15-20"}
     r = rango.get(obj, "3x12")
-    
-    # ESTRUCTURA PRO
     ejercicios_pro = {
         "Empuje": [f"Press Banca {r}", f"Press Militar {r}", f"Aperturas {r}", f"Press Francés {r}"],
         "Tracción": [f"Dominadas {r}", f"Remo con Barra {r}", f"Curl con Barra {r}", f"Curl Inverso (Antebrazo) {r}"],
@@ -35,13 +32,7 @@ def generar_rutina_ia(obj, dias):
         "Torso": [f"Press Inclinado {r}", f"Jalón al pecho {r}", f"Elevaciones Laterales {r}", f"Plancha {r}"],
         "Fullbody": [f"Peso Muerto {r}", f"Press Banca {r}", f"Remo {r}", f"Press Militar {r}"]
     }
-    
-    estructura = {
-        3: ["Empuje", "Tracción", "Pierna"],
-        4: ["Torso", "Pierna", "Empuje", "Tracción"],
-        5: ["Empuje", "Tracción", "Pierna", "Torso", "Fullbody"]
-    }
-    
+    estructura = {3: ["Empuje", "Tracción", "Pierna"], 4: ["Torso", "Pierna", "Empuje", "Tracción"], 5: ["Empuje", "Tracción", "Pierna", "Torso", "Fullbody"]}
     plan = {}
     dias_sel = estructura.get(dias, estructura[3])
     for i, tipo in enumerate(dias_sel):
@@ -94,8 +85,26 @@ else:
             with st.expander(dia):
                 for e in ejer: st.write(f"✅ {e}")
     
+    elif st.session_state.page == "Supl":
+        st.subheader("Plan de Suplementación Elite")
+        peso, obj = st.session_state.data[3], st.session_state.data[5]
+        suplementos = {
+            "Creatina Monohidrato": f"{round(peso * 0.05, 1)}g diarios. Recuperación y fuerza pura.",
+            "Proteína Whey": f"Hasta {round((peso * 1.8)/3, 0)}g por batido. Para alcanzar tu meta proteica.",
+            "Omega-3 (EPA/DHA)": "2-3g diarios. Antiinflamatorio articular.",
+            "Magnesio (Bisglicinato)": "300mg antes de dormir. Mejora el sueño y relajación."
+        }
+        if obj == "Definición": suplementos["Multivitamínico"] = "1 al día para cubrir micronutrientes."
+        if obj == "Fuerza": suplementos["Beta-Alanina"] = "3g diarios para rendimiento de alta intensidad."
+        for nombre, desc in suplementos.items():
+            with st.expander(f"💊 {nombre}"): st.write(desc)
+        st.warning("⚠️ Consulta siempre con tu médico.")
+    
+    elif st.session_state.page == "Progreso":
+        st.subheader("Tu Evolución")
+    
     elif st.session_state.page == "Chat":
         st.subheader("IA Coach")
         q = st.text_input("Pregunta al Coach:")
-        if q: st.write("IA: Ejecuta con control excéntrico y llega al fallo técnico.")
+        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
 
