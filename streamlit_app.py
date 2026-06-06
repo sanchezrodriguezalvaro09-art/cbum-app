@@ -15,49 +15,55 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. BASE DE DATOS ---
-conn = sqlite3.connect('cbum_elite_final.db', check_same_thread=False)
+conn = sqlite3.connect('cbum_elite_full.db', check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
 conn.commit()
 
-# --- 3. GESTIÓN DE SESIÓN ---
+# --- 3. MOTOR DE IA PARA RUTINAS ---
+def generar_rutina_ia(obj, dias):
+    # Base de ejercicios completa
+    ejercicios_base = {
+        "Pecho": ["Press Banca", "Aperturas con mancuernas", "Press Inclinado"],
+        "Espalda": ["Dominadas", "Remo con barra", "Jalón al pecho"],
+        "Hombro": ["Press Militar", "Elevaciones laterales", "Pájaros"],
+        "Piernas": ["Sentadilla", "Prensa", "Extensiones", "Curl Femoral"],
+        "Brazos": ["Curl Barra", "Press Francés", "Antebrazo con barra"],
+        "Abdomen": ["Plancha", "Crunch", "Elevación de piernas"]
+    }
+    
+    # IA reparte grupos musculares según los días elegidos
+    plan = {}
+    grupos = list(ejercicios_base.keys())
+    for i in range(dias):
+        # Distribución inteligente: 2 grupos por día
+        g1 = grupos[i % len(grupos)]
+        g2 = grupos[(i + 1) % len(grupos)]
+        plan[f"Día {i+1}: {g1} + {g2}"] = ejercicios_base[g1] + ejercicios_base[g2]
+    return plan
+
+# --- 4. GESTIÓN SESIÓN ---
 if 'user' not in st.session_state: st.session_state.user = None
 
-# --- 4. LÓGICA DE LA IA ---
-def get_rutina_ia(obj):
-    planes = {
-        "Hipertrofia": {"Día 1: Pecho/Tríceps": ["Press Banca 4x10", "Press Militar 3x10"]},
-        "Fuerza": {"Día 1: Básico Pesado": ["Sentadilla 5x5", "Peso Muerto 5x5"]},
-        "Músculo Magro": {"Día 1: Torso": ["Press Inclinado 3x12", "Jalón Pecho 3x12"]},
-        "Definición": {"Día 1: HIIT": ["Burpees 4x45seg", "Sprints 10x30seg"]}
-    }
-    return planes.get(obj, {"Día 1: General": ["Rutina adaptada"]})
-
-# --- 5. PANTALLA DE ACCESO ---
 if not st.session_state.user:
     st.title("🚀 CBUM ELITE PRO")
     tab1, tab2 = st.tabs(["ENTRAR", "REGISTRO ELITE"])
-    
-    with tab2: # REGISTRO
-        with st.form("reg_form"):
-            n = st.text_input("Nombre de Usuario")
-            p = st.text_input("Contraseña", type="password")
-            alt = st.number_input("Altura (cm)", 150, 220, 180)
-            pes = st.number_input("Peso (kg)", 50.0, 150.0, 80.0)
+    with tab2:
+        with st.form("reg"):
+            n, p = st.text_input("Usuario"), st.text_input("Contraseña", type="password")
+            alt, pes = st.number_input("Altura"), st.number_input("Peso")
             obj = st.selectbox("Objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
-            dias = st.slider("Días de entreno", 3, 5, 4)
-            if st.form_submit_button("Registrarse"):
+            dias = st.slider("Días", 3, 5, 4)
+            if st.form_submit_button("Registrar"):
                 try:
                     c.execute("INSERT INTO usuarios (nombre, pass, peso, altura, objetivo, dias) VALUES (?,?,?,?,?,?)", (n, p, pes, alt, obj, dias))
                     conn.commit()
-                    st.success("Registrado. ¡Ya puedes entrar!")
-                except: st.error("Error: El usuario ya existe.")
-            
-    with tab1: # LOGIN
-        with st.form("login_form"):
-            un = st.text_input("Usuario")
-            up = st.text_input("Contraseña", type="password")
+                    st.success("Registrado.")
+                except: st.error("Error.")
+    with tab1:
+        with st.form("login"):
+            un, up = st.text_input("User"), st.text_input("Pass", type="password")
             if st.form_submit_button("Acceder"):
                 c.execute("SELECT * FROM usuarios WHERE nombre=? AND pass=?", (un, up))
                 user = c.fetchone()
@@ -65,9 +71,8 @@ if not st.session_state.user:
                     st.session_state.user = user[1]
                     st.session_state.data = user
                     st.rerun()
-                else: st.error("Credenciales incorrectas.")
 
-# --- 6. APP PRINCIPAL ---
+# --- 5. APP PRINCIPAL ---
 else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
@@ -80,17 +85,15 @@ else:
     if c4.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # VISTAS
     if st.session_state.page == "Entrenar":
-        st.subheader(f"Objetivo: {st.session_state.data[5]}")
-        rutina = get_rutina_ia(st.session_state.data[5])
-        for dia, ejer in rutina.items():
+        st.subheader("Rutina IA Completa")
+        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
+        for dia, ejer in plan.items():
             with st.expander(dia):
-                for e in ejer: st.write(f"✅ {e}")
-    elif st.session_state.page == "Supl":
-        st.subheader("Suplementación Elite")
-    elif st.session_state.page == "Progreso":
-        st.subheader(f"Seguimiento: {st.session_state.data[3]} kg")
+                for e in ejer: st.write(f"✅ {e} - 3 series x 12 reps")
+    
     elif st.session_state.page == "Chat":
-        st.subheader("Asistente IA")
+        st.subheader("IA Coach")
+        query = st.text_input("Pregunta a tu entrenador IA:")
+        if query: st.write("IA: Basado en tus datos, ajusta el peso si la última serie es fácil.")
 
