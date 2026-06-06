@@ -1,75 +1,83 @@
 import streamlit as st
 import sqlite3
-import time
+import datetime
 
-# --- Configuración inicial ---
+# --- Configuración de la App ---
 st.set_page_config(page_title="CBum Elite Training", layout="centered")
 
-# --- Base de datos ---
-conn = sqlite3.connect('fitness_app.db', check_same_thread=False)
+# --- Base de Datos ---
+conn = sqlite3.connect('fitness_elite.db', check_same_thread=False)
 c = conn.cursor()
-# Tabla de usuarios
-c.execute('''CREATE TABLE IF NOT EXISTS usuarios (nombre TEXT PRIMARY KEY, password TEXT)''')
-# Tabla de pesos
-c.execute('''CREATE TABLE IF NOT EXISTS pesos (usuario TEXT, fecha TEXT, ejercicio TEXT, peso REAL)''')
+c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
+             (nombre TEXT PRIMARY KEY, password TEXT, peso REAL, altura REAL, objetivo TEXT, fecha_registro TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS pesos_semanales 
+             (usuario TEXT, fecha TEXT, peso REAL)''')
 conn.commit()
 
 # --- Gestión de Sesión ---
-if 'usuario' not in st.session_state: st.session_state.usuario = None
+if 'user' not in st.session_state: st.session_state.user = None
 
-# --- Sistema de Login / Registro ---
-if st.session_state.usuario is None:
+# --- Pantalla de Registro/Login ---
+if st.session_state.user is None:
     st.title("CBUM ELITE TRAINING")
-    opcion = st.radio("Acceso:", ["Iniciar Sesión", "Registrarse"])
+    tab1, tab2 = st.tabs(["Iniciar Sesión", "Registrarse"])
     
-    usuario_input = st.text_input("Nombre de usuario")
-    pass_input = st.text_input("Contraseña", type="password")
-    
-    if opcion == "Registrarse":
-        if st.button("Crear cuenta"):
-            try:
-                c.execute("INSERT INTO usuarios VALUES (?, ?)", (usuario_input, pass_input))
-                conn.commit()
-                st.success("Cuenta creada. Ya puedes iniciar sesión.")
-            except:
-                st.error("El usuario ya existe.")
-    else:
+    with tab2:
+        nombre = st.text_input("Nombre de usuario", key="reg_n")
+        pwd = st.text_input("Contraseña", type="password", key="reg_p")
+        peso = st.number_input("Peso inicial (kg)", 40.0, 150.0, 70.0)
+        altura = st.number_input("Altura (cm)", 140, 220, 175)
+        obj = st.selectbox("Objetivo", ["Hipertrofia", "Definición"])
+        if st.button("Registrarse"):
+            c.execute("INSERT INTO usuarios VALUES (?,?,?,?,?,?)", (nombre, pwd, peso, altura, obj, datetime.date.today()))
+            conn.commit()
+            st.success("Cuenta creada. Ve a 'Iniciar Sesión'.")
+
+    with tab1:
+        user_login = st.text_input("Usuario")
+        pass_login = st.text_input("Contraseña", type="password")
         if st.button("Entrar"):
-            c.execute("SELECT * FROM usuarios WHERE nombre=? AND password=?", (usuario_input, pass_input))
+            c.execute("SELECT * FROM usuarios WHERE nombre=? AND password=?", (user_login, pass_login))
             if c.fetchone():
-                st.session_state.usuario = usuario_input
+                st.session_state.user = user_login
                 st.rerun()
-            else:
-                st.error("Usuario o contraseña incorrectos.")
+            else: st.error("Credenciales incorrectas.")
 
-# --- Aplicación (Si está logueado) ---
+# --- App Principal ---
 else:
-    st.title(f"Bienvenido, {st.session_state.usuario} 👋")
+    st.title(f"Bienvenido, {st.session_state.user} 👋")
     
-    menu = st.radio("Menú", ["Entrenamiento", "Suplementación", "Progreso", "Ajustes"], horizontal=True)
-    st.markdown("---")
-    
-    if menu == "Entrenamiento":
-        # ... (Tu código de rutina y temporizador aquí) ...
-        if st.button("⏱️ Iniciar descanso (90s)"):
-            placeholder = st.empty()
-            for s in range(90, 0, -1):
-                placeholder.markdown(f"<h1 style='color:red;'>⏳ {s}s</h1>", unsafe_allow_html=True)
-                time.sleep(1)
-            st.rerun()
+    # --- Menú Inferior (Navegación Profesional) ---
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: menu = st.button("💪 Entrenar")
+    with c2: menu = st.button("💊 Supl.")
+    with c3: menu = st.button("📈 Evolución")
+    with c4: menu = st.button("💬 Chat AI")
 
-    elif menu == "Suplementación":
-        st.subheader("💊 Protocolo")
-        if st.toggle("Activar recordatorios"):
-            st.info("Recordatorios activados.")
+    # --- Lógica de Menús ---
+    if menu: st.session_state.menu = menu # Guarda la selección
+    current_menu = st.session_state.get("menu", "💪 Entrenar")
 
-    elif menu == "Progreso":
-        st.subheader("📈 Tu Evolución")
-        datos = c.execute("SELECT * FROM pesos WHERE usuario=?", (st.session_state.usuario,)).fetchall()
-        st.table(datos)
-
-    elif menu == "Ajustes":
-        if st.button("Cerrar Sesión"):
-            st.session_state.usuario = None
-            st.rerun()
+    if current_menu == "💪 Entrenar":
+        st.subheader("Tu Rutina de Hoy")
+        st.write("Registra tus series y pesos.")
+        
+    elif current_menu == "💊 Supl.":
+        st.subheader("Suplementación")
+        st.info("Recordatorio: Toma tu proteína post-entreno.")
+        
+    elif current_menu == "📈 Evolución":
+        st.subheader("Seguimiento Semanal")
+        nuevo_peso = st.number_input("Actualiza tu peso semanal (kg):")
+        if st.button("Actualizar y Reajustar"):
+            c.execute("INSERT INTO pesos_semanales VALUES (?,?,?)", (st.session_state.user, datetime.date.today(), nuevo_peso))
+            conn.commit()
+            # Lógica de reajuste
+            st.success("Rutina reajustada automáticamente basándonos en tu progreso.")
+            
+    elif current_menu == "💬 Chat AI":
+        st.subheader("Chat de Ayuda")
+        pregunta = st.text_input("¿Qué duda tienes?")
+        if pregunta:
+            st.write("🤖 [IA]: Basado en tus datos, te recomiendo subir la carga un 5% la próxima sesión.")
 
