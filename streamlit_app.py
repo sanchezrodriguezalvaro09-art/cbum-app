@@ -21,6 +21,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS usuarios
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
 c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, peso REAL)''')
 c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+c.execute('''CREATE TABLE IF NOT EXISTS diario_nutricion (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, calorias REAL, info TEXT)''')
 conn.commit()
 
 # --- 3. MOTOR IA ELITE ---
@@ -38,7 +39,6 @@ def generar_rutina_ia(obj, dias, historial_fuerza):
     if len(historial_fuerza) >= 5:
         pesos = [h[1] for h in historial_fuerza[:5]]
         if all(x <= pesos[0] for x in pesos[1:]): variante = "Avanzada"
-
     rango = {"Hipertrofia": "4x10-12", "Fuerza": "5x3-5", "Músculo Magro": "3x10-15", "Definición": "4x15-20"}
     r = rango.get(obj, "3x12")
     
@@ -97,11 +97,12 @@ else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     if c1.button("💪"): st.session_state.page = "Entrenar"
     if c2.button("💊"): st.session_state.page = "Supl"
     if c3.button("📈"): st.session_state.page = "Progreso"
-    if c4.button("💬"): st.session_state.page = "Chat"
+    if c4.button("🥑"): st.session_state.page = "Nutricion"
+    if c5.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.page == "Entrenar":
@@ -126,6 +127,17 @@ else:
         for n, d in suplementos.items():
             with st.expander(f"💊 {n}"): st.write(d)
     
+    elif st.session_state.page == "Nutricion":
+        st.subheader("🥑 Registro Nutricional IA")
+        foto = st.file_uploader("Sube foto de tu comida", type=["jpg", "png"])
+        if foto:
+            st.image(foto, caption="Analizando plato...")
+            st.info("IA: Estimando macronutrientes... (Modo Demo: Tu plato contiene aprox 500 kcal).")
+            if st.button("Guardar en diario"):
+                c.execute("INSERT INTO diario_nutricion (usuario, calorias, info) VALUES (?, ?, ?)", (st.session_state.user, 500, "Plato analizado"))
+                conn.commit()
+                st.success("Registrado en tu historial.")
+
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Seguimiento")
         nuevo_peso = st.number_input("Peso actual", value=float(st.session_state.data[3]))
