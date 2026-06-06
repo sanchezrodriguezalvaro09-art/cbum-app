@@ -127,8 +127,25 @@ else:
                 for ex in contenido["Accesorios"]: st.checkbox(f"{ex}")
     
     elif st.session_state.page == "Supl":
-        st.subheader("Plan de Suplementación Elite")
-        for n, d in {"Creatina": "5g/día", "Proteína": "30g/día", "Omega-3": "2g/día"}.items(): st.write(f"💊 {n}: {d}")
+        st.subheader("💊 Plan de Suplementación Elite")
+        suplementos = {
+            "Creatina Monohidrato": {
+                "Dosis": "5g diarios", 
+                "Beneficio": "Aumenta la fuerza explosiva, mejora la recuperación entre series y favorece la hidratación celular para mayor volumen muscular."
+            },
+            "Proteína Whey": {
+                "Dosis": "30g tras el entreno", 
+                "Beneficio": "Aporta los aminoácidos esenciales necesarios para la síntesis de proteínas y la reparación del tejido muscular dañado durante el ejercicio."
+            },
+            "Omega-3 (Aceite de Pescado)": {
+                "Dosis": "2g diarios (1g en comida, 1g en cena)", 
+                "Beneficio": "Potente antiinflamatorio natural que mejora la salud articular, favorece la función cardiovascular y optimiza la sensibilidad a la insulina."
+            }
+        }
+        for nombre, info in suplementos.items():
+            with st.expander(f"✨ {nombre}"):
+                st.write(f"**Dosis:** {info['Dosis']}")
+                st.write(f"**¿Qué aporta?:** {info['Beneficio']}")
     
     elif st.session_state.page == "Nutricion":
         st.subheader("🥑 Dieta IA y Compra")
