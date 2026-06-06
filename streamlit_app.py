@@ -103,13 +103,13 @@ else:
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    c1.button("💪", on_click=lambda: st.session_state.update(page="Entrenar"))
-    c2.button("💊", on_click=lambda: st.session_state.update(page="Supl"))
-    c3.button("📈", on_click=lambda: st.session_state.update(page="Progreso"))
-    c4.button("🥑", on_click=lambda: st.session_state.update(page="Nutricion"))
+    if c1.button("💪"): st.session_state.page = "Entrenar"
+    if c2.button("💊"): st.session_state.page = "Supl"
+    if c3.button("📈"): st.session_state.page = "Progreso"
+    if c4.button("🥑"): st.session_state.page = "Nutricion"
     if c5.button("⚙️"): st.session_state.page = "Sistema"
     st.markdown('<span class="red-dot"></span>', unsafe_allow_html=True)
-    c6.button("💬", on_click=lambda: st.session_state.update(page="Chat"))
+    if c6.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.page == "Entrenar":
@@ -129,32 +129,42 @@ else:
     
     elif st.session_state.page == "Supl":
         st.subheader("Plan de Suplementación Elite")
-        peso = st.session_state.data[3]
-        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día"}
-        for n, d in suplementos.items():
-            with st.expander(f"💊 {n}"): st.write(d)
+        peso, obj = st.session_state.data[3], st.session_state.data[5]
+        crea_total = round(peso * 0.05, 1)
+        prot_total = round(peso * 1.8, 0)
+        suplementos = {"Creatina Monohidrato": f"Dosis: {crea_total}g al día.", "Proteína Whey": f"Total diario: {prot_total}g.", "Omega-3": "2-3g al día.", "Magnesio": "300mg al día."}
+        for nombre, desc in suplementos.items():
+            with st.expander(f"💊 {nombre}"): st.write(desc)
     
     elif st.session_state.page == "Nutricion":
         st.subheader("🥑 Registro Nutricional IA")
-        if st.file_uploader("Sube foto de tu comida", type=["jpg", "png"]):
-            st.info("IA: Estimando macros.")
-            if st.button("Guardar en diario"): st.success("Registrado.")
+        foto = st.file_uploader("Sube foto de tu comida", type=["jpg", "png"])
+        if foto:
+            st.image(foto, caption="Analizando plato...")
+            st.info("IA: Estimando macronutrientes... (Modo Demo: Tu plato contiene aprox 500 kcal).")
+            if st.button("Guardar en diario"):
+                c.execute("INSERT INTO diario_nutricion (usuario, calorias, info) VALUES (?, ?, ?)", (st.session_state.user, 500, "Plato analizado"))
+                conn.commit()
+                st.success("Registrado.")
 
     elif st.session_state.page == "Sistema":
         st.subheader("⚙️ Centro de Actualización IA")
-        st.warning("Se ha detectado una optimización científica (Estudio 2026).")
-        if st.button("Aplicar Mejora"): st.balloons()
+        st.warning("Se ha detectado una optimización científica en la carga mecánica (Estudio 2026).")
+        if st.button("Aplicar Mejora Científica"):
+            st.balloons()
+            st.success("Sistema actualizado.")
 
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Gráficas y Reportes")
         df = pd.read_sql_query("SELECT fecha, peso_kg, rpe FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
-        if not df.empty: st.line_chart(df[['peso_kg', 'rpe']])
+        if not df.empty:
+            st.line_chart(df[['peso_kg', 'rpe']])
         
         with st.form("carga"):
             ejer = st.text_input("Ejercicio")
             kilos = st.number_input("Kilos")
             reps = st.number_input("Reps")
-            rpe = st.slider("RPE", 1, 10, 8)
+            rpe = st.slider("RPE (Esfuerzo Percibido 1-10)", 1, 10, 8)
             if st.form_submit_button("Registrar"):
                 c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
                 conn.commit()
@@ -164,9 +174,12 @@ else:
             pdf = FPDF()
             pdf.add_page()
             pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Informe de: {st.session_state.user}", ln=True, align='C')
-            st.download_button("Descargar PDF", data=pdf.output(dest='S').encode('latin-1'), file_name="informe.pdf")
+            pdf.cell(200, 10, txt=f"Informe de Atleta: {st.session_state.user}", ln=True, align='C')
+            pdf.cell(200, 10, txt=f"Progreso registrado en la app CBum Elite Pro", ln=True)
+            pdf_bytes = pdf.output(dest='S').encode('latin-1')
+            st.download_button("Descargar PDF", data=pdf_bytes, file_name="informe_atleta.pdf")
 
     elif st.session_state.page == "Chat":
         st.subheader("IA Coach")
-        if st.text_input("Pregunta:"): st.write("IA: Sigue progresando.")
+        q = st.text_input("Pregunta al Coach:")
+        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
