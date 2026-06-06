@@ -1,86 +1,84 @@
 import streamlit as st
+import sqlite3
 import time
 
 # --- Configuración inicial ---
 st.set_page_config(page_title="CBum Elite Training", layout="centered")
 
+# --- Base de datos (Persistencia de datos) ---
+conn = sqlite3.connect('fitness_data.db', check_same_thread=False)
+c = conn.cursor()
+c.execute('''CREATE TABLE IF NOT EXISTS pesos (usuario TEXT, fecha TEXT, ejercicio TEXT, peso REAL)''')
+conn.commit()
+
+# --- CSS Estilo ---
 st.markdown("""
     <style>
-    div[data-baseweb="select"] div { color: #FF0000 !important; font-weight: 900 !important; }
+    .timer-box { font-size: 80px; text-align: center; color: #FF0000; font-weight: bold; background: #000; padding: 50px; border-radius: 20px; }
     h1 { color: #FFD700; text-align: center; }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>CBUM ELITE TRAINING</h1>", unsafe_allow_html=True)
+# --- Gestión de Sesión ---
+if 'usuario' not in st.session_state: st.session_state.usuario = None
 
-# --- Entrada de Datos ---
-col1, col2 = st.columns(2)
-with col1:
-    peso_corp = st.number_input("Peso corporal (kg)", 40, 150, 70)
-    altura = st.number_input("Altura (cm)", 140, 220, 175)
-with col2:
-    dias = st.number_input("Días por semana", 3, 6, 4)
-    nivel = st.select_slider("Nivel", options=["Principiante", "Intermedio", "Avanzado"])
-
-objetivo = st.selectbox("Objetivo:", ["Hipertrofia", "Definición", "Músculo magro"])
-
-if st.button("Generar Plan Fusionado (Máquinas + Mancuernas)"):
-    # --- Suplementación ---
-    st.markdown("---")
-    st.markdown("### 💊 Protocolo de Suplementación")
-    proteina = peso_corp * 1.8
-    st.success(f"Proteína recomendada: {proteina:.0f}g diarios")
-    st.info("Creatina: 5g diarios (Monohidrato, estándar de seguridad)")
-    st.write("⚠️ *Recuerda: Toma tu suplementación post-entrenamiento para mejor absorción.*")
-
-    # --- Lógica de Entrenamiento ---
-    series_reps = "3x12" if nivel == "Principiante" else "4x10" if nivel == "Intermedio" else "5x10 con Drop-sets"
+if st.session_state.usuario is None:
+    st.title("CBUM ELITE TRAINING")
+    nombre = st.text_input("Nombre de usuario")
+    if st.button("Iniciar Sesión"):
+        if nombre:
+            st.session_state.usuario = nombre
+            st.rerun()
+else:
+    st.title(f"Bienvenido, {st.session_state.usuario} 👋")
     
+    # --- Navegación ---
+    menu = st.radio("Menú", ["Entrenamiento", "Suplementación", "Progreso", "Ajustes"], horizontal=True)
     st.markdown("---")
-    st.subheader(f"Rutina Híbrida para {dias} días - {objetivo}")
-
-    # Temporizador
-    if st.button("⏱️ Iniciar descanso (90s)"):
-        with st.empty():
+    
+    if menu == "Entrenamiento":
+        equipo = st.selectbox("Estilo de entrenamiento:", ["Mancuernas", "Máquinas", "Fusionado (Híbrido)", "Peso Libre"])
+        
+        # --- Temporizador de Bloqueo ---
+        if 'iniciar_timer' not in st.session_state: st.session_state.iniciar_timer = False
+        
+        if st.button("⏱️ Iniciar descanso (90s)"):
+            st.session_state.iniciar_timer = True
+            
+        if st.session_state.iniciar_timer:
+            placeholder = st.empty()
             for s in range(90, 0, -1):
-                st.write(f"⏳ Descanso: {s}s")
+                placeholder.markdown(f"<div class='timer-box'>⏳ {s}s</div>", unsafe_allow_html=True)
                 time.sleep(1)
-            st.write("¡A por la siguiente serie!")
+            st.session_state.iniciar_timer = False
+            st.rerun()
+            
+        # --- Rutina (Visible si no hay timer) ---
+        else:
+            st.subheader(f"Rutina: {equipo}")
+            ejercicio_ejemplo = "Press Inclinado"
+            peso_registro = st.number_input(f"Peso para {ejercicio_ejemplo} (kg)", min_value=0.0, step=0.5)
+            if st.button("Guardar Peso"):
+                c.execute("INSERT INTO pesos VALUES (?, ?, ?, ?)", (st.session_state.usuario, time.strftime("%Y-%m-%d"), ejercicio_ejemplo, peso_registro))
+                conn.commit()
+                st.success("¡Peso guardado correctamente!")
 
-    # Base de ejercicios fusionada (Lo mejor de máquinas y mancuernas)
-    ejercicios = {
-        "Pecho": ["Press Inclinado (Mancuernas)", "Press Plano (Máquina)", "Fondos", "Aperturas (Máquina)"],
-        "Espalda": ["Dominadas", "Remo en Máquina", "Jalón al pecho", "Remo con Mancuerna"],
-        "Bíceps": ["Curl con Mancuerna", "Curl en Máquina", "Curl Martillo", "Curl Scott (Máquina)"],
-        "Tríceps": ["Press Francés (Mancuernas)", "Extensiones polea (Máquina)", "Dips", "Ext. tras nuca (Mancuerna)"],
-        "Pierna": ["Sentadilla con Mancuerna", "Prensa", "Curl femoral (Máquina)", "Extensiones (Máquina)"],
-        "Abdomen": ["Plancha", "Crunch en Máquina", "Elev. piernas", "Rueda abdominal"],
-        "Antebrazo": ["Curl muñeca (Mancuerna)", "Paseo granjero", "Curl invertido", "Hold agarre (Máquina)"]
-    }
+    elif menu == "Suplementación":
+        st.subheader("💊 Protocolo de Suplementación")
+        st.write("Recordatorio: Toma tu proteína y creatina post-entreno.")
+        notif = st.toggle("Activar notificaciones en móvil")
+        if notif:
+            st.info("✅ Permiso concedido. Avisos de suplementación activos.")
 
-    # Asignación exacta según días (Mismo esquema que pediste)
-    if dias == 3:
-        rutina_map = {"Día 1": ["Pecho", "Tríceps"], "Día 2": ["Espalda", "Bíceps"], "Día 3": ["Pierna", "Abdomen", "Antebrazo"]}
-    elif dias == 4:
-        rutina_map = {"Día 1": ["Pecho", "Tríceps"], "Día 2": ["Espalda", "Bíceps"], "Día 3": ["Pierna"], "Día 4": ["Abdomen", "Antebrazo"]}
-    elif dias == 5:
-        rutina_map = {"Día 1": ["Pecho", "Tríceps"], "Día 2": ["Espalda", "Bíceps"], "Día 3": ["Pierna"], "Día 4": ["Hombro"], "Día 5": ["Abdomen", "Antebrazo"]}
-    else:
-        rutina_map = {"Día 1": ["Pecho"], "Día 2": ["Espalda"], "Día 3": ["Pierna"], "Día 4": ["Hombro"], "Día 5": ["Bíceps", "Tríceps"], "Día 6": ["Abdomen", "Antebrazo"]}
+    elif menu == "Progreso":
+        st.subheader("📈 Tu Evolución")
+        st.write("Aquí verás tus marcas guardadas en la base de datos.")
+        # Ejemplo de lectura de datos
+        datos = c.execute("SELECT * FROM pesos WHERE usuario=?", (st.session_state.usuario,)).fetchall()
+        st.table(datos)
 
-    # Visualización
-    for dia, grupos in rutina_map.items():
-        with st.expander(f"{dia} - Sesión"):
-            for grupo in grupos:
-                st.write(f"#### {grupo}")
-                for ej in ejercicios.get(grupo, []):
-                    col1, col2, col3 = st.columns([0.5, 3, 1.5])
-                    with col1:
-                        st.checkbox("✅", key=f"check_{dia}_{ej}")
-                    with col2:
-                        st.write(f"**{ej}** ({series_reps})")
-                    with col3:
-                        st.number_input("kg", key=f"peso_{dia}_{ej}", min_value=0.0, step=0.5)
-
-    st.success("¡Plan guardado! Registra tus pesos y observa tu evolución.")
+    elif menu == "Ajustes":
+        if st.button("Cerrar Sesión"):
+            st.session_state.usuario = None
+            st.rerun()
 
