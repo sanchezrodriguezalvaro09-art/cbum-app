@@ -70,6 +70,20 @@ def generar_rutina_ia(obj, dias, historial_fuerza):
         plan[f"Día {i+1}: {tipo}"] = ejercicios_pro[tipo]
     return plan
 
+def generar_dieta_semanal(peso, objetivo):
+    dieta = {
+        "Desayuno": ["Avena (80g)", "Huevos (3 unidades)", "Fruta (1 pieza)"],
+        "Almuerzo": ["Yogur griego (200g)", "Nueces (30g)"],
+        "Comida": ["Arroz (100g en crudo)", "Pechuga de Pollo (200g)", "Verdura (150g)"],
+        "Merienda": ["Batido de Proteína", "Plátano (1 unidad)"],
+        "Cena": ["Pescado blanco (200g)", "Patata cocida (200g)", "Ensalada verde"]
+    }
+    lista = {
+        "Pechuga de Pollo": "1.4kg", "Arroz": "700g", "Avena": "560g", 
+        "Huevos": "21 unidades", "Pescado": "1.4kg", "Patatas": "1.4kg"
+    }
+    return dieta, lista
+
 # --- 4. GESTIÓN SESIÓN ---
 if 'user' not in st.session_state: st.session_state.user = None
 
@@ -129,42 +143,32 @@ else:
     
     elif st.session_state.page == "Supl":
         st.subheader("Plan de Suplementación Elite")
-        peso, obj = st.session_state.data[3], st.session_state.data[5]
-        crea_total = round(peso * 0.05, 1)
-        prot_total = round(peso * 1.8, 0)
-        suplementos = {"Creatina Monohidrato": f"Dosis: {crea_total}g al día.", "Proteína Whey": f"Total diario: {prot_total}g.", "Omega-3": "2-3g al día.", "Magnesio": "300mg al día."}
-        for nombre, desc in suplementos.items():
-            with st.expander(f"💊 {nombre}"): st.write(desc)
+        peso = st.session_state.data[3]
+        suplementos = {"Creatina": f"{round(peso * 0.05, 1)}g/día", "Proteína": f"{round(peso * 1.8, 0)}g/día", "Omega-3": "2-3g/día", "Magnesio": "300mg/día"}
+        for n, d in suplementos.items():
+            with st.expander(f"💊 {n}"): st.write(d)
     
     elif st.session_state.page == "Nutricion":
-        st.subheader("🥑 Registro Nutricional IA")
-        foto = st.file_uploader("Sube foto de tu comida", type=["jpg", "png"])
-        if foto:
-            st.image(foto, caption="Analizando plato...")
-            st.info("IA: Estimando macronutrientes... (Modo Demo: Tu plato contiene aprox 500 kcal).")
-            if st.button("Guardar en diario"):
-                c.execute("INSERT INTO diario_nutricion (usuario, calorias, info) VALUES (?, ?, ?)", (st.session_state.user, 500, "Plato analizado"))
-                conn.commit()
-                st.success("Registrado.")
-
-    elif st.session_state.page == "Sistema":
-        st.subheader("⚙️ Centro de Actualización IA")
-        st.warning("Se ha detectado una optimización científica en la carga mecánica (Estudio 2026).")
-        if st.button("Aplicar Mejora Científica"):
-            st.balloons()
-            st.success("Sistema actualizado.")
+        st.subheader("🥑 Dieta IA y Compra Semanal")
+        if st.button("Generar Plan Semanal y Lista de la Compra"):
+            dieta, lista = generar_dieta_semanal(st.session_state.data[3], st.session_state.data[5])
+            for comida, alimentos in dieta.items():
+                with st.expander(f"{comida}"):
+                    for ali in alimentos: st.write(f"- {ali}")
+            st.divider()
+            st.subheader("🛒 Lista de la compra")
+            for art, cant in lista.items(): st.write(f"**{art}**: {cant}")
 
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Gráficas y Reportes")
         df = pd.read_sql_query("SELECT fecha, peso_kg, rpe FROM historial_ejercicios WHERE usuario=?", conn, params=(st.session_state.user,))
-        if not df.empty:
-            st.line_chart(df[['peso_kg', 'rpe']])
+        if not df.empty: st.line_chart(df[['peso_kg', 'rpe']])
         
         with st.form("carga"):
             ejer = st.text_input("Ejercicio")
             kilos = st.number_input("Kilos")
             reps = st.number_input("Reps")
-            rpe = st.slider("RPE (Esfuerzo Percibido 1-10)", 1, 10, 8)
+            rpe = st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
                 c.execute("INSERT INTO historial_ejercicios (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
                 conn.commit()
@@ -175,11 +179,13 @@ else:
             pdf.add_page()
             pdf.set_font("Arial", size=12)
             pdf.cell(200, 10, txt=f"Informe de Atleta: {st.session_state.user}", ln=True, align='C')
-            pdf.cell(200, 10, txt=f"Progreso registrado en la app CBum Elite Pro", ln=True)
             pdf_bytes = pdf.output(dest='S').encode('latin-1')
             st.download_button("Descargar PDF", data=pdf_bytes, file_name="informe_atleta.pdf")
 
+    elif st.session_state.page == "Sistema":
+        st.subheader("⚙️ Sistema")
+        if st.button("Aplicar Mejora"): st.balloons()
+    
     elif st.session_state.page == "Chat":
-        st.subheader("IA Coach")
-        q = st.text_input("Pregunta al Coach:")
-        if q: st.write("IA: Basado en tus datos, mantén la intensidad y controla la fase excéntrica.")
+        st.subheader("💬 IA Coach")
+        st.text_input("Pregunta al Coach:")
