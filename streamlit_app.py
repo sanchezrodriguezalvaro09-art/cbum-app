@@ -41,9 +41,7 @@ conn = sqlite3.connect('cbum_elite_final_pro.db', check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
              (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
-c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, peso REAL)''')
 c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios_v2 (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, rpe INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-c.execute('''CREATE TABLE IF NOT EXISTS diario_nutricion (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, calorias REAL, info TEXT)''')
 conn.commit()
 
 # --- 3. MOTOR IA ELITE ---
@@ -65,17 +63,6 @@ def generar_rutina_ia(obj, dias):
     for i, tipo in enumerate(estructura.get(dias, estructura[3])):
         plan[f"Día {i+1}: {tipo}"] = rutinas[tipo]
     return plan
-
-def generar_dieta_semanal(peso, objetivo):
-    dieta = {
-        "Desayuno": ["Avena (80g)", "Huevos (3 unidades)", "Fruta"],
-        "Almuerzo": ["Yogur griego", "Nueces (30g)"],
-        "Comida": ["Arroz (100g en crudo)", "Pechuga de Pollo (200g)", "Verdura"],
-        "Merienda": ["Batido de Proteína", "Plátano"],
-        "Cena": ["Pescado blanco (200g)", "Patata cocida (200g)", "Ensalada verde"]
-    }
-    lista = {"Pechuga Pollo": "1.4kg", "Arroz": "700g", "Avena": "560g", "Huevos": "21 un", "Pescado": "1.4kg", "Patatas": "1.4kg"}
-    return dieta, lista
 
 # --- 4. GESTIÓN SESIÓN ---
 if 'user' not in st.session_state: st.session_state.user = None
@@ -104,6 +91,14 @@ if not st.session_state.user:
                 if user:
                     st.session_state.user = user[1]; st.session_state.data = user; st.rerun()
 else:
+    # Lógica de cálculo personalizado
+    peso = st.session_state.data[3]
+    dias_entreno = st.session_state.data[6]
+    
+    # Cálculos dinámicos
+    dosis_creatina = round(peso * 0.07, 1)
+    dosis_proteina = "40g" if dias_entreno >= 4 else "25g"
+
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
@@ -127,55 +122,33 @@ else:
                 for ex in contenido["Accesorios"]: st.checkbox(f"{ex}")
     
     elif st.session_state.page == "Supl":
-        st.subheader("💊 Plan de Suplementación Elite")
+        st.subheader("💊 Plan de Suplementación Personalizado")
+        st.write(f"Basado en tu peso de **{peso}kg** y **{dias_entreno} días** de entreno:")
+        
         suplementos = {
             "Creatina Monohidrato": {
-                "Dosis": "5g diarios", 
-                "Beneficio": "Aumenta la fuerza explosiva, mejora la recuperación entre series y favorece la hidratación celular para mayor volumen muscular."
+                "Dosis": f"{dosis_creatina}g diarios", 
+                "Beneficio": "Optimizado para tu masa corporal. Mejora fuerza y volumen celular."
             },
             "Proteína Whey": {
-                "Dosis": "30g tras el entreno", 
-                "Beneficio": "Aporta los aminoácidos esenciales necesarios para la síntesis de proteínas y la reparación del tejido muscular dañado durante el ejercicio."
+                "Dosis": f"{dosis_proteina} post-entreno", 
+                "Beneficio": "Dosis ajustada a tu alta frecuencia de entrenamiento para máxima recuperación."
             },
-            "Omega-3 (Aceite de Pescado)": {
-                "Dosis": "2g diarios (1g en comida, 1g en cena)", 
-                "Beneficio": "Potente antiinflamatorio natural que mejora la salud articular, favorece la función cardiovascular y optimiza la sensibilidad a la insulina."
+            "Omega-3": {
+                "Dosis": "2g diarios", 
+                "Beneficio": "Salud articular y control de inflamación sistémica."
             }
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
-                st.write(f"**Dosis:** {info['Dosis']}")
+                st.write(f"**Dosis personalizada:** {info['Dosis']}")
                 st.write(f"**¿Qué aporta?:** {info['Beneficio']}")
-    
-    elif st.session_state.page == "Nutricion":
-        st.subheader("🥑 Dieta IA y Compra")
-        if st.button("Generar Plan Semanal"):
-            dieta, lista = generar_dieta_semanal(st.session_state.data[3], st.session_state.data[5])
-            for k, v in dieta.items(): st.write(f"**{k}**: {v}")
-            st.divider()
-            for k, v in lista.items(): st.write(f"🛒 {k}: {v}")
 
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Historial y Registro")
-        try:
-            df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios_v2 WHERE usuario=?", conn, params=(st.session_state.user,))
-            if not df.empty: st.bar_chart(df.set_index('ejercicio'))
-        except: st.info("Registra tu primer ejercicio.")
         with st.form("carga"):
-            ejer = st.text_input("Ejercicio")
-            kilos = st.number_input("Kilos", min_value=0.0)
-            reps = st.number_input("Reps", min_value=0)
-            rpe = st.slider("RPE", 1, 10, 8)
+            ejer, kilos = st.text_input("Ejercicio"), st.number_input("Kilos", min_value=0.0)
+            reps, rpe = st.number_input("Reps", min_value=0), st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
-                conn.commit()
-                st.success("Guardado correctamente")
-                st.rerun()
-
-    elif st.session_state.page == "Sistema":
-        st.subheader("⚙️ Configuración")
-        if st.button("Aplicar Mejora IA"): st.balloons()
-    
-    elif st.session_state.page == "Chat":
-        st.subheader("💬 Coach")
-        st.text_input("Pregunta al Coach:")
+                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?,?,?,?,?)", (st.session_state.user, ejer, kilos, reps, rpe))
+                conn.commit(); st.rerun()
