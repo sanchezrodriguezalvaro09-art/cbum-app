@@ -49,11 +49,11 @@ conn.commit()
 # --- 3. MOTOR IA ELITE ---
 def obtener_estructura_rutina(r):
     return {
-        "Empuje": {"Base": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos en paralelas {r}"], "Accesorios": ["Press inclinado mancuernas", "Elevaciones laterales", "Extensión tríceps cuerda", "Cruces polea", "Facepull"]},
-        "Tracción": {"Base": [f"Dominadas {r}", f"Remo con barra {r}", f"Curl con barra {r}"], "Accesorios": ["Jalón al pecho agarre neutro", "Remo polea baja", "Pájaros (hombro post)", "Curl martillo", "Antebrazo"]},
-        "Pierna": {"Base": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"], "Accesorios": ["Extensiones cuádriceps", "Curl femoral tumbado", "Gemelos de pie", "Hip thrust", "Abdominales con peso"]},
-        "Torso": {"Base": [f"Press Inclinado {r}", f"Remo a una mano {r}", f"Elevaciones Laterales {r}"], "Accesorios": ["Aperturas mancuernas", "Remo al mentón", "Press Francés", "Core colgado", "Pájaros"]},
-        "Fullbody": {"Base": [f"Peso Muerto {r}", f"Press Banca {r}", f"Sentadilla {r}"], "Accesorios": ["Dominadas", "Press Militar", "Curl femoral", "Gemelos", "Core"]}
+        "Empuje": {"Base": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos en paralelas {r}"], "Accesorios": ["Press inclinado mancuernas 3x12", "Elevaciones laterales 3x15", "Extensión tríceps cuerda 3x15", "Cruces polea 3x12", "Facepull 3x15"]},
+        "Tracción": {"Base": [f"Dominadas {r}", f"Remo con barra {r}", f"Curl con barra {r}"], "Accesorios": ["Jalón al pecho agarre neutro 3x12", "Remo polea baja 3x12", "Pájaros (hombro post) 3x15", "Curl martillo 3x12", "Antebrazo 3x15"]},
+        "Pierna": {"Base": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"], "Accesorios": ["Extensiones cuádriceps 3x15", "Curl femoral tumbado 3x15", "Gemelos de pie 4x15", "Hip thrust 3x12", "Abdominales con peso 3x15"]},
+        "Torso": {"Base": [f"Press Inclinado {r}", f"Remo a una mano {r}", f"Elevaciones Laterales {r}"], "Accesorios": ["Aperturas mancuernas 3x12", "Remo al mentón 3x12", "Press Francés 3x12", "Core colgado 3x15", "Pájaros 3x15"]},
+        "Fullbody": {"Base": [f"Peso Muerto {r}", f"Press Banca {r}", f"Sentadilla {r}"], "Accesorios": ["Dominadas 3x8", "Press Militar 3x10", "Curl femoral 3x12", "Gemelos 3x15", "Core 3x15"]}
     }
 
 def generar_rutina_ia(obj, dias):
@@ -123,60 +123,4 @@ else:
             with st.expander(dia):
                 st.write("**--- BASE PESADA ---**")
                 for e in contenido["Base"]: st.write(f"✅ {e}")
-                st.write("**--- ACCESORIOS ---**")
-                for ex in contenido["Accesorios"]: st.checkbox(f"{ex}")
-    
-    elif st.session_state.page == "Supl":
-        st.subheader("💊 Plan de Suplementación Personalizado")
-        peso_usuario = st.session_state.data[3]
-        creatina = round(peso_usuario * 0.05, 1)
-        proteina = round(peso_usuario * 0.4, 0)
-        suplementos = {
-            "Creatina Monohidrato": {"Dosis": f"{creatina}g diarios", "Beneficio": "Mejora la fuerza explosiva y la hidratación muscular."},
-            "Proteína Whey": {"Dosis": f"{int(proteina)}g post-entreno", "Beneficio": "Aporte rápido de aminoácidos para la síntesis proteica."},
-            "Omega-3": {"Dosis": "2g diarios", "Beneficio": "Regulador de la inflamación sistémica."}
-        }
-        for nombre, info in suplementos.items():
-            with st.expander(f"✨ {nombre}"):
-                st.write(f"**Dosis:** {info['Dosis']}")
-                st.write(f"**¿Qué aporta?:** {info['Beneficio']}")
-    
-    elif st.session_state.page == "Nutricion":
-        st.subheader("🥑 Dieta IA y Compra")
-        if st.button("Generar Plan Semanal"):
-            dieta, lista = generar_dieta_semanal(st.session_state.data[3], st.session_state.data[5])
-            for k, v in dieta.items(): st.write(f"**{k}**: {v}")
-            st.divider()
-            for k, v in lista.items(): st.write(f"🛒 {k}: {v}")
-
-    elif st.session_state.page == "Progreso":
-        st.subheader("📊 Historial y Registro")
-        try:
-            df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios_v2 WHERE usuario=?", conn, params=(st.session_state.user,))
-            if not df.empty: st.bar_chart(df.set_index('ejercicio'))
-        except: st.info("Registra tu primer ejercicio.")
-        with st.form("carga"):
-            ejer = st.text_input("Ejercicio")
-            kilos = st.number_input("Kilos", min_value=0.0)
-            reps = st.number_input("Reps", min_value=0)
-            rpe = st.slider("RPE", 1, 10, 8)
-            if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
-                conn.commit()
-                st.success("Guardado correctamente")
-                st.rerun()
-
-    elif st.session_state.page == "Sistema":
-        st.subheader("⚙️ Configuración")
-        # Función para cambiar objetivo
-        nuevo_obj = st.selectbox("Seleccionar nuevo objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
-        if st.button("Actualizar Objetivo"):
-            c.execute("UPDATE usuarios SET objetivo=? WHERE nombre=?", (nuevo_obj, st.session_state.user))
-            conn.commit()
-            st.success(f"Objetivo actualizado a {nuevo_obj}. Por favor, vuelve a entrar.")
-        
-        if st.button("Aplicar Mejora IA"): st.balloons()
-    
-    elif st.session_state.page == "Chat":
-        st.subheader("💬 Coach")
-        st.text_input("Pregunta al Coach:")
+                st.write("**
