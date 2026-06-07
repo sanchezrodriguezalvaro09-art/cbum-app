@@ -22,7 +22,6 @@ st.markdown("""
     .stButton button:hover { transform: scale(1.05); background: #0000FF; }
     h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
     
-    /* Azul Eléctrico brillante de alta visibilidad para ejercicios opcionales */
     .stCheckbox label {
         color: #00F2FF !important;
         font-weight: 700 !important;
@@ -109,9 +108,21 @@ if not st.session_state.user:
                 c.execute("SELECT * FROM usuarios WHERE nombre=? AND pass=?", (un, up))
                 user = c.fetchone()
                 if user:
-                    st.session_state.user = user[1]; st.session_state.data = user; st.rerun()
+                    st.session_state.user = user[1]; st.session_state.data = user; st.session_state.guia = True; st.rerun()
 else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
+    
+    if st.session_state.get('guia', False):
+        with st.expander("👋 BIENVENIDO A CBUM ELITE - GUÍA RÁPIDA"):
+            st.write("💪 **Entrenar**: Rutina personalizada y cronómetro de descansos.")
+            st.write("💊 **Supl**: Dosis recomendadas basadas en tu peso.")
+            st.write("🛒 **Tienda**: Enlaces de compra HSN (suplementos y gym).")
+            st.write("📈 **Progreso**: Registra tu peso y tus marcas de carga.")
+            st.write("🥑 **Nutricion**: Plan de dieta y lista de la compra.")
+            st.write("⚙️ **Sistema**: Ajusta tus objetivos si cambias de fase.")
+            if st.button("Entendido, ¡vamos a entrenar!"):
+                st.session_state.guia = False
+                st.rerun()
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
@@ -126,7 +137,7 @@ else:
 
     if st.session_state.page == "Entrenar":
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
-        st.success("🔥 ¡Racha de entrenamiento activa! Mantén el foco.")
+        st.success("🔥 ¡Racha de entrenamiento activa!")
         plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
         for dia, contenido in plan.items():
             with st.expander(dia):
