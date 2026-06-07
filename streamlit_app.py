@@ -114,13 +114,14 @@ else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
     st.markdown('<div class="fixed-menu">', unsafe_allow_html=True)
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
     if c1.button("💪"): st.session_state.page = "Entrenar"
     if c2.button("💊"): st.session_state.page = "Supl"
-    if c3.button("📈"): st.session_state.page = "Progreso"
-    if c4.button("🥑"): st.session_state.page = "Nutricion"
-    if c5.button("⚙️"): st.session_state.page = "Sistema"
-    if c6.button("💬"): st.session_state.page = "Chat"
+    if c3.button("🛒"): st.session_state.page = "Tienda"
+    if c4.button("📈"): st.session_state.page = "Progreso"
+    if c5.button("🥑"): st.session_state.page = "Nutricion"
+    if c6.button("⚙️"): st.session_state.page = "Sistema"
+    if c7.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.page == "Entrenar":
@@ -169,35 +170,52 @@ else:
             st.download_button("Descargar Archivo", data=pdf.output(dest='S').encode('latin-1'), file_name="rutina.pdf")
     
     elif st.session_state.page == "Supl":
-        st.subheader("💊 Protocolo Elite: Dosis Científicas")
+        st.subheader("💊 Protocolo Elite HSN")
         peso = st.session_state.data[3]
         suplementos = {
             "Creatina Monohidrato": {
                 "Dosis": f"{round(peso * 0.05, 1)}g diarios", 
-                "Momento": "Cualquier hora (constancia clave)",
-                "Info": "Sin fase de carga. Máxima seguridad."
+                "Momento": "Cualquier hora",
+                "Info": "Máxima pureza.",
+                "Enlace": "https://www.hsnstore.com/suplementos/deportivos/creatina"
             },
             "Proteína Whey Isolate": {
                 "Dosis": f"{int(peso * 0.4)}g post-entreno", 
-                "Momento": "Post-entrenamiento",
-                "Info": "Rápida absorción, sin lactosa."
+                "Momento": "Post-entreno",
+                "Info": "Sin lactosa.",
+                "Enlace": "https://www.hsnstore.com/suplementos/proteinas/whey-isolate"
             },
             "Omega-3 (EPA/DHA)": {
                 "Dosis": "2g - 3g diarios", 
                 "Momento": "Con comida principal",
-                "Info": "Antiinflamatorio potente. Busca sello IFOS."
+                "Info": "Sello IFOS.",
+                "Enlace": "https://www.hsnstore.com/suplementos/salud/omega-3"
             },
             "Magnesio Glicinato": {
                 "Dosis": "300mg - 400mg", 
-                "Momento": "30 min antes de dormir",
-                "Info": "Optimiza el sueño y la relajación muscular."
+                "Momento": "Antes de dormir",
+                "Info": "Relajación muscular.",
+                "Enlace": "https://www.hsnstore.com/suplementos/minerales/magnesio"
             }
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
-                st.write(f"**Dosis sugerida:** {info['Dosis']}")
+                st.write(f"**Dosis:** {info['Dosis']}")
                 st.write(f"**Momento:** {info['Momento']}")
                 st.write(f"**Nota:** {info['Info']}")
+                st.link_button("🛒 Comprar en HSN", info['Enlace'])
+
+    elif st.session_state.page == "Tienda":
+        st.subheader("🛒 Equipamiento Elite HSN")
+        equipos = {
+            "Cinturón Gimnasio": ("https://www.hsnstore.com/accesorios/deportivos/cinturones", "Protección lumbar máxima."),
+            "Straps/Muñequeras": ("https://www.hsnstore.com/accesorios/deportivos/muñequeras", "Agarre optimizado."),
+            "Bandas Elásticas": ("https://www.hsnstore.com/accesorios/deportivos/bandas-elasticas", "Resistencia progresiva.")
+        }
+        for nombre, (link, info) in equipos.items():
+            with st.expander(f"🏋️ {nombre}"):
+                st.write(info)
+                st.link_button("Comprar en HSN", link)
     
     elif st.session_state.page == "Nutricion":
         st.subheader("🥑 Dieta IA y Compra")
