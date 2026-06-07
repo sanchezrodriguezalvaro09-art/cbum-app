@@ -125,6 +125,10 @@ else:
 
     if st.session_state.page == "Entrenar":
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
+        
+        # --- OPCIÓN 1: SISTEMA DE LOGROS ---
+        st.success("🔥 ¡Racha de entrenamiento activa! Mantén el foco.")
+        
         plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
         for dia, contenido in plan.items():
             with st.expander(dia):
@@ -140,14 +144,35 @@ else:
                         
                 st.write("**--- ACCESORIOS ---**")
                 for i, ex in enumerate(contenido["Accesorios"]): 
-                    st.checkbox(f"{ex}", key=f"{dia}_{i}")
+                    # --- OPCIÓN 3: REGISTRO DE PESOS ---
+                    c1, c2 = st.columns([3, 1])
+                    with c1: st.checkbox(f"{ex}", key=f"{dia}_{i}")
+                    with c2: 
+                        peso_act = st.number_input("kg", key=f"n_{dia}_{i}")
+                        if st.button("Guardar", key=f"g_{dia}_{i}"):
+                            c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, 0, 0)", (st.session_state.user, ex, peso_act))
+                            conn.commit()
+                            st.toast("Peso guardado")
+                    
                     if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{i}"):
                         placeholder = st.empty()
                         for t in range(60, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {ex}: {t}s")
                             time.sleep(1)
                         placeholder.write(f"### ✅ {ex}: ¡A darle!")
-
+        
+        # --- OPCIÓN 2: EXPORTACIÓN PDF ---
+        if st.button("📥 Generar y Descargar Rutina PDF"):
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(200, 10, txt="CBUM ELITE PRO - RUTINA", ln=1, align='C')
+            pdf.set_font("Arial", size=12)
+            for dia, contenido in plan.items():
+                pdf.cell(200, 10, txt=f"{dia}", ln=1)
+                for e in contenido["Base"]: pdf.cell(200, 10, txt=f"- {e}", ln=1)
+            st.download_button("Descargar Archivo", data=pdf.output(dest='S').encode('latin-1'), file_name="rutina.pdf")
+    
     elif st.session_state.page == "Supl":
         st.subheader("💊 Plan de Suplementación Personalizado")
         peso_usuario = st.session_state.data[3]
