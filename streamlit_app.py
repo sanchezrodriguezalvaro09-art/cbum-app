@@ -125,10 +125,7 @@ else:
 
     if st.session_state.page == "Entrenar":
         st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
-        
-        # --- OPCIÓN 1: SISTEMA DE LOGROS ---
         st.success("🔥 ¡Racha de entrenamiento activa! Mantén el foco.")
-        
         plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
         for dia, contenido in plan.items():
             with st.expander(dia):
@@ -144,7 +141,6 @@ else:
                         
                 st.write("**--- ACCESORIOS ---**")
                 for i, ex in enumerate(contenido["Accesorios"]): 
-                    # --- OPCIÓN 3: REGISTRO DE PESOS ---
                     c1, c2 = st.columns([3, 1])
                     with c1: st.checkbox(f"{ex}", key=f"{dia}_{i}")
                     with c2: 
@@ -161,7 +157,6 @@ else:
                             time.sleep(1)
                         placeholder.write(f"### ✅ {ex}: ¡A darle!")
         
-        # --- OPCIÓN 2: EXPORTACIÓN PDF ---
         if st.button("📥 Generar y Descargar Rutina PDF"):
             pdf = FPDF()
             pdf.add_page()
@@ -174,19 +169,35 @@ else:
             st.download_button("Descargar Archivo", data=pdf.output(dest='S').encode('latin-1'), file_name="rutina.pdf")
     
     elif st.session_state.page == "Supl":
-        st.subheader("💊 Plan de Suplementación Personalizado")
-        peso_usuario = st.session_state.data[3]
-        creatina = round(peso_usuario * 0.05, 1)
-        proteina = round(peso_usuario * 0.4, 0)
+        st.subheader("💊 Protocolo Elite: Dosis Científicas")
+        peso = st.session_state.data[3]
         suplementos = {
-            "Creatina Monohidrato": {"Dosis": f"{creatina}g diarios", "Beneficio": "Mejora la fuerza explosiva y la hidratación muscular."},
-            "Proteína Whey": {"Dosis": f"{int(proteina)}g post-entreno", "Beneficio": "Aporte rápido de aminoácidos para la síntesis proteica."},
-            "Omega-3": {"Dosis": "2g diarios", "Beneficio": "Regulador de la inflamación sistémica."}
+            "Creatina Monohidrato": {
+                "Dosis": f"{round(peso * 0.05, 1)}g diarios", 
+                "Momento": "Cualquier hora (constancia clave)",
+                "Info": "Sin fase de carga. Máxima seguridad."
+            },
+            "Proteína Whey Isolate": {
+                "Dosis": f"{int(peso * 0.4)}g post-entreno", 
+                "Momento": "Post-entrenamiento",
+                "Info": "Rápida absorción, sin lactosa."
+            },
+            "Omega-3 (EPA/DHA)": {
+                "Dosis": "2g - 3g diarios", 
+                "Momento": "Con comida principal",
+                "Info": "Antiinflamatorio potente. Busca sello IFOS."
+            },
+            "Magnesio Glicinato": {
+                "Dosis": "300mg - 400mg", 
+                "Momento": "30 min antes de dormir",
+                "Info": "Optimiza el sueño y la relajación muscular."
+            }
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
-                st.write(f"**Dosis:** {info['Dosis']}")
-                st.write(f"**¿Qué aporta?:** {info['Beneficio']}")
+                st.write(f"**Dosis sugerida:** {info['Dosis']}")
+                st.write(f"**Momento:** {info['Momento']}")
+                st.write(f"**Nota:** {info['Info']}")
     
     elif st.session_state.page == "Nutricion":
         st.subheader("🥑 Dieta IA y Compra")
