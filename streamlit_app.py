@@ -9,7 +9,7 @@ import io
 st.set_page_config(page_title="CBum Elite Pro", layout="centered")
 st.markdown("""
     <style>
-    .stApp { background: #050505; color: #FFFFFF; font-family: 'Helvetica', sans-serif; }
+    .stApp { background: #050505; color: #FFFFFF; font-family: 'Helvetica', sans-serif; padding-bottom: 80px; }
     .stExpander { background: #121212 !important; border: 1px solid #333 !important; border-radius: 12px !important; }
     .stButton button { 
         background: linear-gradient(90deg, #0000FF, #000044); 
@@ -213,6 +213,13 @@ else:
 
     elif st.session_state.page == "Progreso":
         st.subheader("📊 Historial y Registro")
+        with st.expander("⚖️ Registrar Peso Corporal"):
+            nuevo_peso = st.number_input("Tu peso actual (kg)", min_value=30.0, max_value=150.0)
+            if st.button("Guardar Peso Semanal"):
+                c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
+                conn.commit()
+                st.success("Peso registrado.")
+        
         try:
             df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios_v2 WHERE usuario=?", conn, params=(st.session_state.user,))
             if not df.empty: st.bar_chart(df.set_index('ejercicio'))
