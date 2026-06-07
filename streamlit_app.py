@@ -129,24 +129,12 @@ else:
     elif st.session_state.page == "Supl":
         st.subheader("💊 Plan de Suplementación Personalizado")
         peso_usuario = st.session_state.data[3]
-        dias_usuario = st.session_state.data[6]
-        # Fórmulas de cálculo ajustadas
         creatina = round(peso_usuario * 0.05, 1)
         proteina = round(peso_usuario * 0.4, 0)
-        
         suplementos = {
-            "Creatina Monohidrato": {
-                "Dosis": f"{creatina}g diarios", 
-                "Beneficio": "Mejora la fuerza explosiva y la hidratación muscular, dosificado según tu peso corporal."
-            },
-            "Proteína Whey": {
-                "Dosis": f"{int(proteina)}g post-entreno", 
-                "Beneficio": "Aporte rápido de aminoácidos para la síntesis proteica post-entrenamiento."
-            },
-            "Omega-3": {
-                "Dosis": "2g diarios (1g comida, 1g cena)", 
-                "Beneficio": "Regulador de la inflamación sistémica, clave para la salud articular."
-            }
+            "Creatina Monohidrato": {"Dosis": f"{creatina}g diarios", "Beneficio": "Mejora la fuerza explosiva y la hidratación muscular."},
+            "Proteína Whey": {"Dosis": f"{int(proteina)}g post-entreno", "Beneficio": "Aporte rápido de aminoácidos para la síntesis proteica."},
+            "Omega-3": {"Dosis": "2g diarios", "Beneficio": "Regulador de la inflamación sistémica."}
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
@@ -180,6 +168,13 @@ else:
 
     elif st.session_state.page == "Sistema":
         st.subheader("⚙️ Configuración")
+        # Función para cambiar objetivo
+        nuevo_obj = st.selectbox("Seleccionar nuevo objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
+        if st.button("Actualizar Objetivo"):
+            c.execute("UPDATE usuarios SET objetivo=? WHERE nombre=?", (nuevo_obj, st.session_state.user))
+            conn.commit()
+            st.success(f"Objetivo actualizado a {nuevo_obj}. Por favor, vuelve a entrar.")
+        
         if st.button("Aplicar Mejora IA"): st.balloons()
     
     elif st.session_state.page == "Chat":
