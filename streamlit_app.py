@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import time
 from fpdf import FPDF
 import io
 
@@ -21,7 +22,7 @@ st.markdown("""
     .stButton button:hover { transform: scale(1.05); background: #0000FF; }
     h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
     
-    /* CAMBIO: Azul Eléctrico brillante de alta visibilidad para ejercicios opcionales */
+    /* Azul Eléctrico brillante de alta visibilidad para ejercicios opcionales */
     .stCheckbox label {
         color: #00F2FF !important;
         font-weight: 700 !important;
@@ -128,11 +129,25 @@ else:
         for dia, contenido in plan.items():
             with st.expander(dia):
                 st.write("**--- BASE PESADA ---**")
-                for e in contenido["Base"]: st.write(f"✅ {e}")
+                for e in contenido["Base"]: 
+                    st.write(f"✅ {e}")
+                    if st.button(f"⏱️ Descanso Base: 120s", key=f"base_{e}"):
+                        placeholder = st.empty()
+                        for t in range(120, -1, -1):
+                            placeholder.write(f"### ⏳ Descanso {e}: {t}s")
+                            time.sleep(1)
+                        placeholder.write(f"### ✅ {e}: ¡A darle!")
+                        
                 st.write("**--- ACCESORIOS ---**")
                 for i, ex in enumerate(contenido["Accesorios"]): 
                     st.checkbox(f"{ex}", key=f"{dia}_{i}")
-    
+                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{i}"):
+                        placeholder = st.empty()
+                        for t in range(60, -1, -1):
+                            placeholder.write(f"### ⏳ Descanso {ex}: {t}s")
+                            time.sleep(1)
+                        placeholder.write(f"### ✅ {ex}: ¡A darle!")
+
     elif st.session_state.page == "Supl":
         st.subheader("💊 Plan de Suplementación Personalizado")
         peso_usuario = st.session_state.data[3]
