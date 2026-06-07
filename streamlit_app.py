@@ -170,52 +170,38 @@ else:
             st.download_button("Descargar Archivo", data=pdf.output(dest='S').encode('latin-1'), file_name="rutina.pdf")
     
     elif st.session_state.page == "Supl":
-        st.subheader("💊 Protocolo Elite HSN")
+        st.subheader("💊 Protocolo Elite: Dosis Científicas")
         peso = st.session_state.data[3]
         suplementos = {
-            "Creatina Monohidrato": {
-                "Dosis": f"{round(peso * 0.05, 1)}g diarios", 
-                "Momento": "Cualquier hora",
-                "Info": "Máxima pureza.",
-                "Enlace": "https://www.hsnstore.com/suplementos/deportivos/creatina"
-            },
-            "Proteína Whey Isolate": {
-                "Dosis": f"{int(peso * 0.4)}g post-entreno", 
-                "Momento": "Post-entreno",
-                "Info": "Sin lactosa.",
-                "Enlace": "https://www.hsnstore.com/suplementos/proteinas/whey-isolate"
-            },
-            "Omega-3 (EPA/DHA)": {
-                "Dosis": "2g - 3g diarios", 
-                "Momento": "Con comida principal",
-                "Info": "Sello IFOS.",
-                "Enlace": "https://www.hsnstore.com/suplementos/salud/omega-3"
-            },
-            "Magnesio Glicinato": {
-                "Dosis": "300mg - 400mg", 
-                "Momento": "Antes de dormir",
-                "Info": "Relajación muscular.",
-                "Enlace": "https://www.hsnstore.com/suplementos/minerales/magnesio"
-            }
+            "Creatina Monohidrato": {"Dosis": f"{round(peso * 0.05, 1)}g diarios", "Momento": "Cualquier hora", "Info": "Sin fase de carga."},
+            "Proteína Whey Isolate": {"Dosis": f"{int(peso * 0.4)}g post-entreno", "Momento": "Post-entrenamiento", "Info": "Rápida absorción."},
+            "Omega-3 (EPA/DHA)": {"Dosis": "2g - 3g diarios", "Momento": "Con comida principal", "Info": "Antiinflamatorio."},
+            "Magnesio Glicinato": {"Dosis": "300mg - 400mg", "Momento": "30 min antes de dormir", "Info": "Relajación muscular."}
         }
         for nombre, info in suplementos.items():
             with st.expander(f"✨ {nombre}"):
                 st.write(f"**Dosis:** {info['Dosis']}")
                 st.write(f"**Momento:** {info['Momento']}")
                 st.write(f"**Nota:** {info['Info']}")
-                st.link_button("🛒 Comprar en HSN", info['Enlace'])
 
     elif st.session_state.page == "Tienda":
-        st.subheader("🛒 Equipamiento Elite HSN")
-        equipos = {
-            "Cinturón Gimnasio": ("https://www.hsnstore.com/accesorios/deportivos/cinturones", "Protección lumbar máxima."),
-            "Straps/Muñequeras": ("https://www.hsnstore.com/accesorios/deportivos/muñequeras", "Agarre optimizado."),
-            "Bandas Elásticas": ("https://www.hsnstore.com/accesorios/deportivos/bandas-elasticas", "Resistencia progresiva.")
-        }
-        for nombre, (link, info) in equipos.items():
-            with st.expander(f"🏋️ {nombre}"):
-                st.write(info)
-                st.link_button("Comprar en HSN", link)
+        st.subheader("🛒 Tienda Elite HSN")
+        tab_supl, tab_gym = st.tabs(["💊 Suplementación", "🏋️ Equipamiento"])
+        with tab_supl:
+            links = {
+                "Creatina": "https://www.hsnstore.com/suplementos/deportivos/creatina",
+                "Proteína": "https://www.hsnstore.com/suplementos/proteinas",
+                "Omega-3": "https://www.hsnstore.com/suplementos/salud/omega-3",
+                "Magnesio": "https://www.hsnstore.com/suplementos/minerales/magnesio"
+            }
+            for n, l in links.items(): st.link_button(f"Comprar {n} en HSN", l)
+        with tab_gym:
+            equipos = {
+                "Cinturón": "https://www.hsnstore.com/accesorios/deportivos/cinturones",
+                "Straps": "https://www.hsnstore.com/accesorios/deportivos/muñequeras",
+                "Bandas": "https://www.hsnstore.com/accesorios/deportivos/bandas-elasticas"
+            }
+            for n, l in equipos.items(): st.link_button(f"Comprar {n} en HSN", l)
     
     elif st.session_state.page == "Nutricion":
         st.subheader("🥑 Dieta IA y Compra")
