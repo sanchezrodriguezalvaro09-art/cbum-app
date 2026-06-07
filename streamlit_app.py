@@ -121,4 +121,14 @@ else:
     if c6.button("💬"): st.session_state.page = "Chat"
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if
+    if st.session_state.page == "Entrenar":
+        st.subheader(f"Rutina Elite: {st.session_state.data[5]}")
+        plan = generar_rutina_ia(st.session_state.data[5], st.session_state.data[6])
+        for dia, contenido in plan.items():
+            with st.expander(dia):
+                st.write("**--- BASE PESADA ---**")
+                for e in contenido["Base"]: st.write(f"✅ {e}")
+                st.write("**--- ACCESORIOS ---**")
+                # CORRECCIÓN: Se añade key única al checkbox para evitar error de Streamlit
+                for i, ex in enumerate(contenido["Accesorios"]): 
+                    st.checkbox(
