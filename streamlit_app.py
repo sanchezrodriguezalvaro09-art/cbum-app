@@ -21,11 +21,10 @@ st.markdown("""
     .stButton button:hover { transform: scale(1.05); background: #0000FF; }
     h1, h2 { color: #00D4FF !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.5); }
     
-    /* CAMBIO SOLICITADO: Azul Eléctrico para ejercicios opcionales */
+    /* CAMBIO: Azul Eléctrico exacto para ejercicios opcionales */
     .stCheckbox label {
-        color: #00F2FF !important;
+        color: #007BFF !important;
         font-weight: bold;
-        text-shadow: 0px 0px 5px rgba(0, 242, 255, 0.3);
     }
     
     .fixed-menu { 
