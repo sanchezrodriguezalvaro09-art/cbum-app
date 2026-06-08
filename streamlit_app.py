@@ -158,7 +158,8 @@ else:
                 st.write("**--- BASE PESADA ---**")
                 for e in contenido["Base"]: 
                     st.write(f"✅ {e}")
-                    if st.button(f"⏱️ Descanso Base: 120s", key=f"base_{e}"):
+                    # CORRECCIÓN DE KEY ÚNICA
+                    if st.button(f"⏱️ Descanso Base: 120s", key=f"base_{dia}_{e}"):
                         placeholder = st.empty()
                         for t in range(120, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {e}: {t}s")
@@ -176,7 +177,8 @@ else:
                             conn.commit()
                             st.toast("Peso guardado")
                     
-                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{i}"):
+                    # CORRECCIÓN DE KEY ÚNICA
+                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{ex}"):
                         placeholder = st.empty()
                         for t in range(60, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {ex}: {t}s")
