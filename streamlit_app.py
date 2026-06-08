@@ -53,19 +53,26 @@ c.execute('''CREATE TABLE IF NOT EXISTS diario_nutricion (usuario TEXT, fecha TI
 conn.commit()
 
 # --- 3. MOTOR IA ELITE ---
-def obtener_estructura_rutina(r):
+def obtener_estructura_rutina(r_base, r_acc):
     return {
-        "Empuje": {"Base": [f"Press Banca {r}", f"Press Militar {r}", f"Fondos en paralelas {r}"], "Accesorios": ["Press inclinado mancuernas 3x12", "Elevaciones laterales 3x15", "Extensión tríceps cuerda 3x15", "Cruces polea 3x12", "Facepull 3x15"]},
-        "Tracción": {"Base": [f"Dominadas {r}", f"Remo con barra {r}", f"Curl con barra {r}"], "Accesorios": ["Jalón al pecho agarre neutro 3x12", "Remo polea baja 3x12", "Pájaros (hombro post) 3x15", "Curl martillo 3x12", "Antebrazo 3x15"]},
-        "Pierna": {"Base": [f"Sentadilla {r}", f"Prensa {r}", f"Peso Muerto Rumano {r}"], "Accesorios": ["Extensiones cuádriceps 3x15", "Curl femoral tumbado 3x15", "Gemelos de pie 4x15", "Hip thrust 3x12", "Abdominales con peso 3x15"]},
-        "Torso": {"Base": [f"Press Inclinado {r}", f"Remo a una mano {r}", f"Elevaciones Laterales {r}"], "Accesorios": ["Aperturas mancuernas 3x12", "Remo al mentón 3x12", "Press Francés 3x12", "Core colgado 3x15", "Pájaros 3x15"]},
-        "Fullbody": {"Base": [f"Peso Muerto {r}", f"Press Banca {r}", f"Sentadilla {r}"], "Accesorios": ["Dominadas 3x8", "Press Militar 3x10", "Curl femoral 3x12", "Gemelos 3x15", "Core 3x15"]}
+        "Empuje": {"Base": [f"Press Banca {r_base}", f"Press Militar {r_base}", f"Fondos en paralelas {r_base}"], "Accesorios": [f"Press inclinado mancuernas {r_acc}", f"Elevaciones laterales {r_acc}", f"Extensión tríceps cuerda {r_acc}", f"Cruces polea {r_acc}", f"Facepull {r_acc}"]},
+        "Tracción": {"Base": [f"Dominadas {r_base}", f"Remo con barra {r_base}", f"Curl con barra {r_base}"], "Accesorios": [f"Jalón al pecho {r_acc}", f"Remo polea baja {r_acc}", f"Pájaros {r_acc}", f"Curl martillo {r_acc}", f"Antebrazo {r_acc}"]},
+        "Pierna": {"Base": [f"Sentadilla {r_base}", f"Prensa {r_base}", f"Peso Muerto Rumano {r_base}"], "Accesorios": [f"Extensiones cuádriceps {r_acc}", f"Curl femoral {r_acc}", f"Gemelos {r_acc}", f"Hip thrust {r_acc}", f"Abdominales {r_acc}"]},
+        "Torso": {"Base": [f"Press Inclinado {r_base}", f"Remo a una mano {r_base}", f"Elevaciones Laterales {r_base}"], "Accesorios": [f"Aperturas mancuernas {r_acc}", f"Remo al mentón {r_acc}", f"Press Francés {r_acc}", f"Core colgado {r_acc}", f"Pájaros {r_acc}"]},
+        "Fullbody": {"Base": [f"Peso Muerto {r_base}", f"Press Banca {r_base}", f"Sentadilla {r_base}"], "Accesorios": [f"Dominadas {r_acc}", f"Press Militar {r_acc}", f"Curl femoral {r_acc}", f"Gemelos {r_acc}", f"Core {r_acc}"]}
     }
 
 def generar_rutina_ia(obj, dias):
-    rango = {"Hipertrofia": "4x10-12", "Fuerza": "5x3-5", "Músculo Magro": "3x12-15", "Definición": "4x15-20"}
-    r = rango.get(obj, "3x12")
-    rutinas = obtener_estructura_rutina(r)
+    # Definición de rangos según objetivo (Series x Repes)
+    config = {
+        "Hipertrofia": {"Base": "4x8-10", "Acc": "3x12"},
+        "Músculo Magro": {"Base": "3x10-12", "Acc": "3x15"},
+        "Definición": {"Base": "3x15-20", "Acc": "4x20+"}
+    }
+    
+    esquema = config.get(obj, {"Base": "3x10", "Acc": "3x10"})
+    rutinas = obtener_estructura_rutina(esquema["Base"], esquema["Acc"])
+    
     estructura = {3: ["Empuje", "Tracción", "Pierna"], 4: ["Torso", "Pierna", "Empuje", "Tracción"], 5: ["Empuje", "Tracción", "Pierna", "Torso", "Fullbody"]}
     plan = {}
     for i, tipo in enumerate(estructura.get(dias, estructura[3])):
@@ -93,7 +100,7 @@ if not st.session_state.user:
         with st.form("reg"):
             n, p = st.text_input("Usuario"), st.text_input("Contraseña", type="password")
             alt, pes = st.number_input("Altura"), st.number_input("Peso")
-            obj = st.selectbox("Objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
+            obj = st.selectbox("Objetivo", ["Hipertrofia", "Músculo Magro", "Definición"])
             dias = st.slider("Días", 3, 5, 4)
             if st.form_submit_button("Registrarse"):
                 try:
@@ -144,7 +151,7 @@ else:
                 st.write("**--- BASE PESADA ---**")
                 for e in contenido["Base"]: 
                     st.write(f"✅ {e}")
-                    if st.button(f"⏱️ Descanso Base: 120s", key=f"base_{e}"):
+                    if st.button(f"⏱️ Descanso: 120s", key=f"base_{e}"):
                         placeholder = st.empty()
                         for t in range(120, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {e}: {t}s")
@@ -162,7 +169,7 @@ else:
                             conn.commit()
                             st.toast("Peso guardado")
                     
-                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{i}"):
+                    if st.button(f"⏱️ Descanso: 60s", key=f"acc_{dia}_{i}"):
                         placeholder = st.empty()
                         for t in range(60, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {ex}: {t}s")
@@ -248,7 +255,7 @@ else:
 
     elif st.session_state.page == "Sistema":
         st.subheader("⚙️ Configuración")
-        nuevo_obj = st.selectbox("Seleccionar nuevo objetivo", ["Hipertrofia", "Fuerza", "Músculo Magro", "Definición"])
+        nuevo_obj = st.selectbox("Seleccionar nuevo objetivo", ["Hipertrofia", "Músculo Magro", "Definición"])
         if st.button("Actualizar Objetivo"):
             c.execute("UPDATE usuarios SET objetivo=? WHERE nombre=?", (nuevo_obj, st.session_state.user))
             conn.commit()
