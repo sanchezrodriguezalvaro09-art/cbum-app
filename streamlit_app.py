@@ -1,11 +1,11 @@
 import streamlit as st
-import sqlite3
+from supabase import create_client, Client
 import pandas as pd
 import time
 from fpdf import FPDF
 import io
 
-# --- 1. CONFIGURACIÓN ELITE ---
+# --- 1. CONFIGURACIÓN ELITE Y SUPABASE ---
 st.set_page_config(page_title="CBum Elite Pro", layout="centered")
 st.markdown("""
     <style>
@@ -42,15 +42,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. BASE DE DATOS ---
-conn = sqlite3.connect('cbum_elite_final_pro.db', check_same_thread=False)
-c = conn.cursor()
-c.execute('''CREATE TABLE IF NOT EXISTS usuarios 
-             (id INTEGER PRIMARY KEY, nombre TEXT UNIQUE, pass TEXT, peso REAL, altura REAL, objetivo TEXT, dias INTEGER)''')
-c.execute('''CREATE TABLE IF NOT EXISTS historial_peso (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, peso REAL)''')
-c.execute('''CREATE TABLE IF NOT EXISTS historial_ejercicios_v2 (usuario TEXT, ejercicio TEXT, peso_kg REAL, reps INTEGER, rpe INTEGER, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
-c.execute('''CREATE TABLE IF NOT EXISTS diario_nutricion (usuario TEXT, fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, calorias REAL, info TEXT)''')
-conn.commit()
+# --- CONFIGURACIÓN SUPABASE ---
+URL = "https://qzmvsjseicziadrcbmlx.supabase.co"
+KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6bXZzanNlaWN6aWFkcmNibWx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MzY5MDMsImV4cCI6MjA5NjUxMjkwM30.bdjPCUCm__3XYt0gpsoULQcKiHHOHdCpuvuF4V2KxCc"
+supabase: Client = create_client(URL, KEY)
 
 # --- 3. MOTOR IA ELITE ---
 def obtener_estructura_rutina(r_base, r_acc, es_magro):
@@ -111,18 +106,17 @@ if not st.session_state.user:
             dias = st.slider("Días", 3, 5, 4)
             if st.form_submit_button("Registrarse"):
                 try:
-                    c.execute("INSERT INTO usuarios (nombre, pass, peso, altura, objetivo, dias) VALUES (?,?,?,?,?,?)", (n, p, pes, alt, obj, dias))
-                    conn.commit()
+                    supabase.table("usuarios").insert({"nombre": n, "pass": p, "peso": pes, "altura": alt, "objetivo": obj, "dias": dias}).execute()
                     st.success("Registrado.")
-                except: st.error("Usuario existe.")
+                except Exception as e: st.error("Error al registrar.")
     with tab1:
         with st.form("login"):
             un, up = st.text_input("User"), st.text_input("Pass", type="password")
             if st.form_submit_button("Acceder"):
-                c.execute("SELECT * FROM usuarios WHERE nombre=? AND pass=?", (un, up))
-                user = c.fetchone()
-                if user:
-                    st.session_state.user = user[1]; st.session_state.data = user; st.session_state.guia = True; st.rerun()
+                res = supabase.table("usuarios").select("*").eq("nombre", un).eq("pass", up).execute()
+                if res.data:
+                    user = res.data[0]
+                    st.session_state.user = user['nombre']; st.session_state.data = list(user.values()); st.session_state.guia = True; st.rerun()
 else:
     if 'page' not in st.session_state: st.session_state.page = "Entrenar"
     
@@ -169,16 +163,15 @@ else:
                 st.write("**--- ACCESORIOS ---**")
                 for i, ex in enumerate(contenido["Accesorios"]): 
                     c1, c2 = st.columns([3, 1])
-                    with c1: st.checkbox(f"{ex}", key=f"{dia}_{i}")
+                    with c1: st.checkbox(f"{ex}", key=f"ch_{dia}_{i}")
                     with c2: 
                         peso_act = st.number_input("kg", key=f"n_{dia}_{i}")
                         if st.button("Guardar", key=f"g_{dia}_{i}"):
-                            c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, 0, 0)", (st.session_state.user, ex, peso_act))
-                            conn.commit()
+                            supabase.table("historial_ejercicios_v2").insert({"usuario": st.session_state.user, "ejercicio": ex, "peso_kg": peso_act}).execute()
                             st.toast("Peso guardado")
                     
                     # CORRECCIÓN DE KEY ÚNICA
-                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{ex}"):
+                    if st.button(f"⏱️ Descanso Acc: 60s", key=f"acc_{dia}_{i}"):
                         placeholder = st.empty()
                         for t in range(60, -1, -1):
                             placeholder.write(f"### ⏳ Descanso {ex}: {t}s")
@@ -243,12 +236,12 @@ else:
         with st.expander("⚖️ Registrar Peso Corporal"):
             nuevo_peso = st.number_input("Tu peso actual (kg)", min_value=30.0, max_value=150.0)
             if st.button("Guardar Peso Semanal"):
-                c.execute("INSERT INTO historial_peso (usuario, peso) VALUES (?, ?)", (st.session_state.user, nuevo_peso))
-                conn.commit()
+                supabase.table("historial_peso").insert({"usuario": st.session_state.user, "peso": nuevo_peso}).execute()
                 st.success("Peso registrado.")
         
         try:
-            df = pd.read_sql_query("SELECT ejercicio, peso_kg FROM historial_ejercicios_v2 WHERE usuario=?", conn, params=(st.session_state.user,))
+            res = supabase.table("historial_ejercicios_v2").select("ejercicio, peso_kg").eq("usuario", st.session_state.user).execute()
+            df = pd.DataFrame(res.data)
             if not df.empty: st.bar_chart(df.set_index('ejercicio'))
         except: st.info("Registra tu primer ejercicio.")
         with st.form("carga"):
@@ -257,8 +250,7 @@ else:
             reps = st.number_input("Reps", min_value=0)
             rpe = st.slider("RPE", 1, 10, 8)
             if st.form_submit_button("Registrar"):
-                c.execute("INSERT INTO historial_ejercicios_v2 (usuario, ejercicio, peso_kg, reps, rpe) VALUES (?, ?, ?, ?, ?)", (st.session_state.user, ejer, kilos, reps, rpe))
-                conn.commit()
+                supabase.table("historial_ejercicios_v2").insert({"usuario": st.session_state.user, "ejercicio": ejer, "peso_kg": kilos, "reps": reps, "rpe": rpe}).execute()
                 st.success("Guardado correctamente")
                 st.rerun()
 
@@ -266,8 +258,7 @@ else:
         st.subheader("⚙️ Configuración")
         nuevo_obj = st.selectbox("Seleccionar nuevo objetivo", ["Hipertrofia", "Músculo Magro", "Definición"])
         if st.button("Actualizar Objetivo"):
-            c.execute("UPDATE usuarios SET objetivo=? WHERE nombre=?", (nuevo_obj, st.session_state.user))
-            conn.commit()
+            supabase.table("usuarios").update({"objetivo": nuevo_obj}).eq("nombre", st.session_state.user).execute()
             st.success(f"Objetivo actualizado a {nuevo_obj}. Por favor, vuelve a entrar.")
         if st.button("Aplicar Mejora IA"): st.balloons()
     
